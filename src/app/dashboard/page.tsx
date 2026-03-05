@@ -58,15 +58,14 @@ function formatPower(n: number | null): string {
 }
 
 function getAllianceDuelDay(serverDay: number): { day: number; label: string; sublabel: string } {
-  const cycle = ((serverDay -  + 6) % 7) + 1;
+  const cycle = ((serverDay - 1) % 6) + 1;
   const map: Record<number, { label: string; sublabel: string }> = {
-    1: { label: 'Day 1 — Building', sublabel: 'Construct & upgrade buildings' },
-    2: { label: 'Day 2 — Research', sublabel: 'Complete research tasks' },
-    3: { label: 'Day 3 — Heroes', sublabel: 'Level up and promote heroes' },
-    4: { label: 'Day 4 — Training', sublabel: 'Train troops for points' },
-    5: { label: 'Day 5 — Drones', sublabel: '4× multiplier — highest value day' },
+    1: { label: 'Day 1 — Radar Training', sublabel: 'Drone upgrades and radar tasks' },
+    2: { label: 'Day 2 — Base Expansion', sublabel: 'Construct & upgrade buildings' },
+    3: { label: 'Day 3 — Age of Science', sublabel: 'Complete research tasks' },
+    4: { label: 'Day 4 — Train Heroes', sublabel: 'Level up and promote heroes' },
+    5: { label: 'Day 5 — Total Mobilization', sublabel: 'Train troops for points' },
     6: { label: 'Day 6 — Enemy Buster', sublabel: 'Kill zombies and enemies' },
-    7: { label: 'Day 7 — Reset', sublabel: 'Cycle resets tomorrow' },
   };
   return { day: cycle, ...map[cycle] };
 }
@@ -206,7 +205,7 @@ function ActionCard({
 }
 
 function DuelDayCard({ duel }: { duel: { day: number; label: string; sublabel: string } }) {
-  const isHighValue = duel.day === 5;
+  const isHighValue = duel.day === 1;
   return (
     <div style={{
       padding: '14px 16px',
