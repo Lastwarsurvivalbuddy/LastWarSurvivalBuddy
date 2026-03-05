@@ -1,10 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import Anthropic from '@anthropic-ai/sdk';
 import { createClient } from '@supabase/supabase-js';
-
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY!,
-});
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -141,7 +136,7 @@ export async function POST(req: NextRequest) {
     // History (last 10 exchanges = 20 messages max to keep context tight)
     const recentHistory = history.slice(-20);
 
-    const claudeMessages: Anthropic.MessageParam[] = [
+    const claudeMessages: Array<{ role: string; content: unknown }> = [
       ...recentHistory.map(m => ({
         role: m.role as 'user' | 'assistant',
         content: m.content,
@@ -150,7 +145,7 @@ export async function POST(req: NextRequest) {
 
     // Current user message — may include image
     if (isScreenshot && imageData) {
-      const userContent: Anthropic.ContentBlockParam[] = [
+      const userContent: Array<Record<string, unknown>> = [
         {
           type: 'image',
           source: {
@@ -176,16 +171,25 @@ export async function POST(req: NextRequest) {
     }
 
     // ─── Claude API call ───
-    const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 1000,
-      system: systemPrompt,
-      messages: claudeMessages,
+    const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.ANTHROPIC_API_KEY!,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: systemPrompt,
+        messages: claudeMessages,
+      }),
     });
 
-    const reply = response.content
+    const claudeData = await claudeRes.json();
+    const reply = (claudeData.content as Array<{ type: string; text?: string }>)
       .filter(block => block.type === 'text')
-      .map(block => (block as Anthropic.TextBlock).text)
+      .map(block => block.text || '')
       .join('');
 
     // ─── Save to chat history ───
