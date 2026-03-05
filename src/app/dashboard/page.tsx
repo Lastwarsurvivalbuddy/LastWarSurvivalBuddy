@@ -57,15 +57,33 @@ function formatPower(n: number | null): string {
   return String(n);
 }
 
-function getAllianceDuelDay(serverDay: number): { day: number; label: string; sublabel: string } {
-  const cycle = ((serverDay + 5) % 7) + 1;
+function getAllianceDuelDay(): { day: number; label: string; sublabel: string } {
+  // Duel resets at 8pm CT (2am UTC standard / 1am UTC DST)
+  // Sun=Day1(Drones), Mon=Day2(Building), Tue=Day3(Research)
+  // Wed=Day4(Heroes), Thu=Day5(Training), Fri=Day6(Enemy Buster), Sat=Day7(Reset)
+  const now = new Date();
+  const year = now.getUTCFullYear();
+  const dstStart = new Date(Date.UTC(year, 2, 8));
+  dstStart.setUTCDate(8 + ((7 - dstStart.getUTCDay()) % 7));
+  const dstEnd = new Date(Date.UTC(year, 10, 1));
+  dstEnd.setUTCDate(1 + ((7 - dstEnd.getUTCDay()) % 7));
+  const isDST = now >= dstStart && now < dstEnd;
+  const resetHourUTC = isDST ? 1 : 2;
+  const utcHour = now.getUTCHours();
+  let dayOfWeek = now.getUTCDay();
+  if (utcHour < resetHourUTC) {
+    dayOfWeek = (dayOfWeek + 6) % 7;
+  }
+  const dowToDuel: Record<number, number> = { 0: 1, 1: 2, 2: 3, 3: 4, 4: 5, 5: 6, 6: 7 };
+  const cycle = dowToDuel[dayOfWeek];
   const map: Record<number, { label: string; sublabel: string }> = {
-    1: { label: 'Day 1 — Radar Training', sublabel: 'Drone upgrades and radar tasks' },
-    2: { label: 'Day 2 — Base Expansion', sublabel: 'Construct & upgrade buildings' },
-    3: { label: 'Day 3 — Age of Science', sublabel: 'Complete research tasks' },
-    4: { label: 'Day 4 — Train Heroes', sublabel: 'Level up and promote heroes' },
-    5: { label: 'Day 5 — Total Mobilization', sublabel: 'Train troops for points' },
-    6: { label: 'Day 6 — Enemy Buster', sublabel: 'Kill zombies and enemies' },
+    1: { label: 'Day 1 — Drones', sublabel: '1 alliance point — lowest value day' },
+    2: { label: 'Day 2 — Building', sublabel: '2 alliance points' },
+    3: { label: 'Day 3 — Research', sublabel: '2 alliance points' },
+    4: { label: 'Day 4 — Heroes', sublabel: '2 alliance points' },
+    5: { label: 'Day 5 — Training', sublabel: '2 alliance points' },
+    6: { label: 'Day 6 — Enemy Buster', sublabel: '4 alliance points — fight your vs opponent' },
+    7: { label: 'Day 7 — Reset', sublabel: 'Cycle resets tonight at 8pm CT' },
   };
   return { day: cycle, ...map[cycle] };
 }
@@ -205,7 +223,7 @@ function ActionCard({
 }
 
 function DuelDayCard({ duel }: { duel: { day: number; label: string; sublabel: string } }) {
-  const isHighValue = duel.day === 1;
+  const isHighValue = duel.day === 6;
   return (
     <div style={{
       padding: '14px 16px',
@@ -297,7 +315,7 @@ export default function Dashboard() {
 
   if (!profile) return null;
 
-  const duel = getAllianceDuelDay(profile.server_day);
+  const duel = getAllianceDuelDay();
   const displayName = profile.commander_name || userEmail.split('@')[0];
 
   return (
