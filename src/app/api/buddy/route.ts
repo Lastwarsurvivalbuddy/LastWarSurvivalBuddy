@@ -1,279 +1,315 @@
 import { NextRequest, NextResponse } from 'next/server';
+import Anthropic from '@anthropic-ai/sdk';
 import { createClient } from '@supabase/supabase-js';
 
-const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
-const MODEL = 'claude-sonnet-4-20250514';
-const MAX_TOKENS = 1024;
+const anthropic = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY!,
+});
 
-// ─── TIERED LIMITS ────────────────────────────────────────────────────────────
-// text_limit: max text questions per day
-// screenshot_limit: max screenshot questions per day (subset of text_limit)
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
-const TIER_LIMITS: Record<string, { text: number; screenshots: number }> = {
-  free:             { text: 5,   screenshots: 0  },
-  pro:              { text: 30,  screenshots: 10 },
-  elite:            { text: 100, screenshots: 20 },
-  founding:         { text: 20,  screenshots: 5  },
-  alliance_premium: { text: 100, screenshots: 20 },
+// ─── Daily limits per tier ───
+const TIER_LIMITS: Record<string, { questions: number; screenshots: number }> = {
+  free:     { questions: 5,   screenshots: 0  },
+  pro:      { questions: 30,  screenshots: 10 },
+  elite:    { questions: 100, screenshots: 20 },
+  founding: { questions: 20,  screenshots: 5  },
+  alliance: { questions: 100, screenshots: 20 },
 };
 
-const UPGRADE_MESSAGE = `You've hit your daily limit. Upgrade to keep going:
-• Pro — $9.99/mo — 30 questions + 10 screenshots/day
-• Elite — $19.99/mo — 100 questions + 20 screenshots/day
-• Founding Member — $99 lifetime Elite access (limited spots)`;
-
-// ─── SYSTEM PROMPT BUILDER ────────────────────────────────────────────────────
-
-function buildSystemPrompt(profile: Record<string, unknown>): string {
-  const tierLabels: Record<string, string> = {
-    f2p: 'Free to Play', budget: 'Budget', moderate: 'Moderate',
-    investor: 'Investor', whale: 'Whale', mega_whale: 'Mega Whale',
-  };
-  const playstyleLabels: Record<string, string> = {
-    fighter: 'Player vs. Player (Fighter)',
-    developer: 'Player vs. Event (Developer)',
-    commander: '50/50 Commander',
-    scout: 'Still Figuring It Out (Scout)',
-  };
-  const troopLabels: Record<string, string> = {
-    aircraft: 'Aircraft', tank: 'Tank', missile: 'Missile Vehicle', mixed: 'Mixed',
-  };
-  const tierBadge: Record<string, string> = {
-    t8: 'T8', t9: 'T9', t10_working: 'T10 (working towards)',
-    t10_unlocked: 'T10 (unlocked)', t11: 'T11', t12: 'T12',
-  };
-  const rankLabels: Record<string, string> = {
-    top_5: 'Top 5', top_10: 'Top 10', top_20: 'Top 20',
-    top_50: 'Top 50', top_100: 'Top 100', still_building: 'Still Building',
-  };
-
-  // Alliance Duel current day
+// ─── Duel day calculation (DST-aware, 8pm CT reset) ───
+function getCurrentDuelDay(): { day: number; label: string } {
   const now = new Date();
-  const year = now.getUTCFullYear();
-  const dstStart = new Date(Date.UTC(year, 2, 8));
-  dstStart.setUTCDate(8 + ((7 - dstStart.getUTCDay()) % 7));
-  const dstEnd = new Date(Date.UTC(year, 10, 1));
-  dstEnd.setUTCDate(1 + ((7 - dstEnd.getUTCDay()) % 7));
-  const isDST = now >= dstStart && now < dstEnd;
-  const resetHourUTC = isDST ? 1 : 2;
-  let dayOfWeek = now.getUTCDay();
-  if (now.getUTCHours() < resetHourUTC) dayOfWeek = (dayOfWeek + 6) % 7;
-  const dowToDuel: Record<number, number> = { 4: 4, 5: 5, 6: 6, 0: 7, 1: 1, 2: 2, 3: 3 };
-  const duelDay = dowToDuel[dayOfWeek];
-  const duelNames: Record<number, string> = {
-    1: 'Day 1 — Drones (1 alliance point, lowest value)',
-    2: 'Day 2 — Building (2 alliance points)',
-    3: 'Day 3 — Research (2 alliance points)',
-    4: 'Day 4 — Heroes (2 alliance points)',
-    5: 'Day 5 — Training (2 alliance points)',
-    6: 'Day 6 — Enemy Buster (4 alliance points, HIGHEST VALUE — fight vs opponent server)',
-    7: 'Day 7 — Reset',
+
+  // Determine CT offset (DST: UTC-5, Standard: UTC-6)
+  // DST runs second Sunday March → first Sunday November (approx)
+  const month = now.getUTCMonth(); // 0-indexed
+  const isDST = month >= 2 && month <= 9; // March–October (rough)
+  const ctOffsetHours = isDST ? -5 : -6;
+
+  // Shift to CT
+  const ctTime = new Date(now.getTime() + ctOffsetHours * 60 * 60 * 1000);
+  const ctHour = ctTime.getUTCHours();
+  const ctDow = ctTime.getUTCDay(); // 0=Sun
+
+  // Duel resets at 8pm CT — if before 8pm use today's DOW, if after use tomorrow's
+  const effectiveDow = ctHour >= 20 ? (ctDow + 1) % 7 : ctDow;
+
+  // Mapping: Sun=1(Drones), Mon=2(Building), Tue=3(Research),
+  //          Wed=4(Heroes), Thu=5(Training), Fri=6(EnemyBuster), Sat=7(Reset)
+  const dowToDay: Record<number, { day: number; label: string }> = {
+    0: { day: 1, label: 'Drones (1pt)'       },
+    1: { day: 2, label: 'Building (2pts)'    },
+    2: { day: 3, label: 'Research (2pts)'    },
+    3: { day: 4, label: 'Heroes (2pts)'      },
+    4: { day: 5, label: 'Training (2pts)'    },
+    5: { day: 6, label: 'Enemy Buster (4pts)' },
+    6: { day: 7, label: 'Reset'              },
   };
 
-  const goals = (profile.goals as string[] || [])
-    .map(g => (g as string).replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()))
-    .join(', ') || 'None set';
-
-  return `You are Buddy, the AI coach inside Last War: Survival Buddy — a personalized coaching app for the mobile game Last War: Survival.
-
-Your job is to give this specific player — Commander ${profile.commander_name || 'Unknown'} — precise, actionable advice based on everything you know about them. Never give generic advice. Always tie your answer back to their profile.
-
-═══════════════════════════════════════
-COMMANDER PROFILE
-═══════════════════════════════════════
-Name:         Commander ${profile.commander_name || 'Unknown'}
-Server:       #${profile.server_number} · Day ${profile.server_day}
-HQ Level:     ${profile.hq_level}
-Troop Tier:   ${tierBadge[profile.troop_tier as string] || profile.troop_tier}
-Troop Type:   ${troopLabels[profile.troop_type as string] || profile.troop_type}
-Playstyle:    ${playstyleLabels[profile.playstyle as string] || profile.playstyle}
-Spend Tier:   ${tierLabels[profile.spend_tier as string] || profile.spend_tier}
-Server Rank:  ${rankLabels[profile.server_rank as string] || profile.server_rank}
-Hero Power:   ${profile.hero_power ? `${(Number(profile.hero_power) / 1_000_000).toFixed(1)}M` : 'Not set'}
-Total Power:  ${profile.total_power ? `${(Number(profile.total_power) / 1_000_000).toFixed(1)}M` : 'Not set'}
-Goals:        ${goals}
-Subscription: ${profile.subscription_tier || 'free'}
-
-═══════════════════════════════════════
-TODAY'S INTEL
-═══════════════════════════════════════
-Alliance Duel: ${duelNames[duelDay]}
-Duel Reset:    8pm CT (resets daily)
-
-═══════════════════════════════════════
-GAME KNOWLEDGE
-═══════════════════════════════════════
-TROOP COUNTERS: Aircraft beats Infantry. Infantry beats Tank. Tank beats Aircraft. Missile Vehicle counters all but has lower sustained power. Specialization matters more than raw numbers after Day 70.
-
-DEFENSE: Squads engage sequentially by position (1→2→3→4). Position order ≠ squad label. Always analyze by position.
-
-ALLIANCE DUEL CYCLE (weekly, resets 8pm CT):
-- Day 1: Drones — 1 point (lowest)
-- Day 2: Building — 2 points
-- Day 3: Research — 2 points
-- Day 4: Heroes — 2 points
-- Day 5: Training — 2 points
-- Day 6: Enemy Buster — 4 points (HIGHEST — vs opponent server)
-- Day 7: Reset
-
-ARMS RACE: Daily event. Double-dipping with Alliance Duel is the highest efficiency play in the game. Most players don't know this. Always recommend aligning Arms Race actions with the current Duel day focus.
-
-T10 TRACK: HQ 16–30, Seasons 1–3.
-T11 TRACK: HQ 31–35, Season 4+. Uses Armament Research system.
-
-HOT DEALS: Pack ROI depends on contents, current bottleneck, upcoming events, and spend tier. Always factor in the player's spend tier before recommending a purchase. If the player uploads a screenshot of a pack, analyze the contents and give a specific yes/no recommendation.
-
-═══════════════════════════════════════
-RESPONSE RULES
-═══════════════════════════════════════
-1. Be direct and specific. No fluff. Lead with the answer.
-2. Always reference the player's actual stats and situation.
-3. Use numbered lists for action items. Keep them scannable.
-4. If you don't have enough info to answer well, ask one clarifying question.
-5. Keep responses concise — this is a mobile app. Aim for under 200 words unless depth is genuinely needed.
-6. Use "Commander [name]" sparingly — once per response max.
-7. Never recommend spending above the player's stated spend tier.
-8. You are NOT a generic AI assistant. You are Buddy — their personal Last War coach.`;
+  return dowToDay[effectiveDow] ?? { day: 1, label: 'Drones (1pt)' };
 }
-
-// ─── ROUTE HANDLER ────────────────────────────────────────────────────────────
 
 export async function POST(req: NextRequest) {
   try {
-    const { messages, sessionId, hasScreenshot } = await req.json();
+    // ─── Auth ───
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const token = authHeader.slice(7);
 
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
-
-    // Auth
-    const authHeader = req.headers.get('authorization');
-    if (!authHeader) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    const token = authHeader.replace('Bearer ', '');
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    if (authError || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
-    // Fetch commander profile
-    const { data: profile } = await supabase
-      .from('commander_profile')
-      .select('*')
-      .eq('id', user.id)
+    // ─── Parse body ───
+    const body = await req.json();
+    const userMessage: string = body.message || '';
+    const history: Array<{ role: 'user' | 'assistant'; content: string }> = body.history || [];
+    const imageData: { base64: string; mimeType: string } | undefined = body.image;
+
+    const isScreenshot = !!imageData;
+
+    if (!userMessage && !isScreenshot) {
+      return NextResponse.json({ error: 'Message or image required' }, { status: 400 });
+    }
+
+    // ─── Subscription & limits ───
+    const { data: sub } = await supabase
+      .from('subscriptions')
+      .select('tier')
+      .eq('user_id', user.id)
       .single();
-    if (!profile) return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
 
-    // Get tier limits
-    const subTier = (profile.subscription_tier as string) || 'free';
-    const limits = TIER_LIMITS[subTier] || TIER_LIMITS.free;
+    const tier = sub?.tier || 'free';
+    const limits = TIER_LIMITS[tier] || TIER_LIMITS.free;
 
-    // Check daily usage
+    if (isScreenshot && limits.screenshots === 0) {
+      return NextResponse.json({
+        error: 'Screenshot analysis requires Pro or above.',
+        upgradeMessage: "Screenshot analysis is a Pro feature. Upgrade to Buddy Pro ($9.99/mo) or go Founding Member for $99 lifetime.",
+      }, { status: 403 });
+    }
+
+    // ─── Daily usage check ───
     const today = new Date().toISOString().split('T')[0];
+
     const { data: usage } = await supabase
       .from('daily_usage')
       .select('question_count, screenshot_count')
       .eq('user_id', user.id)
-      .eq('usage_date', today)
+      .eq('date', today)
       .single();
 
     const questionCount = usage?.question_count || 0;
     const screenshotCount = usage?.screenshot_count || 0;
 
-    // Check screenshot access
-    if (hasScreenshot && limits.screenshots === 0) {
+    if (questionCount >= limits.questions) {
       return NextResponse.json({
-        error: 'limit_reached',
-        message: 'Screenshot analysis is available on Pro and above. Upgrade to Pro ($9.99/mo) to unlock pack analysis and screenshot questions.',
+        error: 'Daily question limit reached.',
+        upgradeMessage: tier === 'free'
+          ? "You've hit your daily limit (5 questions). Upgrade to keep going: Pro — $9.99/mo · Elite — $19.99/mo · Founding Member — $99 lifetime"
+          : `You've used all ${limits.questions} questions for today. Resets at midnight.`,
       }, { status: 429 });
     }
 
-    // Check screenshot daily limit
-    if (hasScreenshot && screenshotCount >= limits.screenshots) {
+    if (isScreenshot && screenshotCount >= limits.screenshots) {
       return NextResponse.json({
-        error: 'limit_reached',
-        message: `You've used your ${limits.screenshots} screenshot questions for today. Resets at midnight. Upgrade to Elite for 20 screenshots/day.`,
+        error: 'Daily screenshot limit reached.',
+        upgradeMessage: `You've used all ${limits.screenshots} screenshot analyses for today. Resets at midnight.`,
       }, { status: 429 });
     }
 
-    // Check question daily limit
-    if (questionCount >= limits.text) {
-      return NextResponse.json({
-        error: 'limit_reached',
-        message: UPGRADE_MESSAGE,
-      }, { status: 429 });
+    // ─── Load commander profile ───
+    const { data: profile } = await supabase
+      .from('commander_profile')
+      .select('*')
+      .eq('user_id', user.id)
+      .single();
+
+    const duel = getCurrentDuelDay();
+
+    // ─── Build system prompt ───
+    const systemPrompt = buildSystemPrompt(profile, duel, tier);
+
+    // ─── Build message array for Claude ───
+    // History (last 10 exchanges = 20 messages max to keep context tight)
+    const recentHistory = history.slice(-20);
+
+    const claudeMessages: Anthropic.MessageParam[] = [
+      ...recentHistory.map(m => ({
+        role: m.role as 'user' | 'assistant',
+        content: m.content,
+      })),
+    ];
+
+    // Current user message — may include image
+    if (isScreenshot && imageData) {
+      const userContent: Anthropic.ContentBlockParam[] = [
+        {
+          type: 'image',
+          source: {
+            type: 'base64',
+            media_type: imageData.mimeType as 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp',
+            data: imageData.base64,
+          },
+        },
+      ];
+
+      if (userMessage) {
+        userContent.push({ type: 'text', text: userMessage });
+      } else {
+        userContent.push({
+          type: 'text',
+          text: 'Please analyze this screenshot. Is this a good purchase for my situation? What does it contain and what is your recommendation?',
+        });
+      }
+
+      claudeMessages.push({ role: 'user', content: userContent });
+    } else {
+      claudeMessages.push({ role: 'user', content: userMessage });
     }
 
-    // Call Claude API
-    const claudeRes = await fetch(ANTHROPIC_API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': process.env.ANTHROPIC_API_KEY!,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model: MODEL,
-        max_tokens: MAX_TOKENS,
-        system: buildSystemPrompt(profile),
-        messages: messages.map((m: { role: string; content: unknown }) => ({
-          role: m.role,
-          content: m.content,
-        })),
-      }),
+    // ─── Claude API call ───
+    const response = await anthropic.messages.create({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 1000,
+      system: systemPrompt,
+      messages: claudeMessages,
     });
 
-    if (!claudeRes.ok) {
-      const err = await claudeRes.text();
-      console.error('Claude API error:', err);
-      return NextResponse.json({ error: 'AI error' }, { status: 500 });
-    }
+    const reply = response.content
+      .filter(block => block.type === 'text')
+      .map(block => (block as Anthropic.TextBlock).text)
+      .join('');
 
-    const claudeData = await claudeRes.json();
-    const reply = claudeData.content?.[0]?.text || '';
+    // ─── Save to chat history ───
+    // Upsert session (one per day, keyed by user + date)
+    const sessionKey = `${user.id}_${today}`;
+    const { data: session, error: sessionError } = await supabase
+      .from('chat_sessions')
+      .upsert(
+        { user_id: user.id, session_date: today, id: sessionKey },
+        { onConflict: 'id' }
+      )
+      .select('id')
+      .single();
 
-    // Increment usage
-    await supabase.from('daily_usage').upsert({
-      user_id: user.id,
-      usage_date: today,
-      question_count: questionCount + 1,
-      screenshot_count: hasScreenshot ? screenshotCount + 1 : screenshotCount,
-    }, { onConflict: 'user_id,usage_date' });
-
-    // Save to chat history
-    if (sessionId) {
-      const lastUserMessage = messages[messages.length - 1];
+    if (session) {
       await supabase.from('chat_messages').insert([
         {
-          session_id: sessionId,
+          session_id: session.id,
           user_id: user.id,
           role: 'user',
-          content: typeof lastUserMessage.content === 'string'
-            ? lastUserMessage.content
-            : '[screenshot question]',
+          content: userMessage || '[screenshot]',
+          has_image: isScreenshot,
         },
         {
-          session_id: sessionId,
+          session_id: session.id,
           user_id: user.id,
           role: 'assistant',
           content: reply,
+          has_image: false,
         },
       ]);
-      await supabase
-        .from('chat_sessions')
-        .update({ updated_at: new Date().toISOString() })
-        .eq('id', sessionId);
     }
 
-    const remaining = limits.text - questionCount - 1;
-    const isFree = subTier === 'free';
+    // ─── Update daily usage ───
+    const newQuestionCount = questionCount + 1;
+    const newScreenshotCount = isScreenshot ? screenshotCount + 1 : screenshotCount;
 
-    return NextResponse.json({
-      reply,
-      questionsUsed: questionCount + 1,
-      questionsRemaining: isFree ? Math.max(0, remaining) : null,
-    });
+    await supabase
+      .from('daily_usage')
+      .upsert(
+        {
+          user_id: user.id,
+          date: today,
+          question_count: newQuestionCount,
+          screenshot_count: newScreenshotCount,
+        },
+        { onConflict: 'user_id,date' }
+      );
+
+    return NextResponse.json({ reply });
 
   } catch (err) {
-    console.error('Buddy API error:', err);
-    return NextResponse.json({ error: 'Server error' }, { status: 500 });
+    console.error('[Buddy API error]', err);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
+}
+
+// ─── System prompt builder ───
+function buildSystemPrompt(
+  profile: Record<string, unknown> | null,
+  duel: { day: number; label: string },
+  tier: string
+): string {
+  if (!profile) {
+    return `You are Buddy, the AI coach for Last War: Survival. 
+The player's profile hasn't loaded — give helpful general advice and ask them to check their profile settings.
+Keep responses concise, specific, and tactical. No fluff.`;
+  }
+
+  const duelLabels: Record<number, string> = {
+    1: 'Day 1 — Drones (1pt). Lowest value day. Use it for housekeeping, don't burn big speedups.',
+    2: 'Day 2 — Building (2pts). Upgrade buildings. Double-dip: Building upgrades score Arms Race too.',
+    3: 'Day 3 — Research (2pts). Run research. Double-dip: Research scores Arms Race too.',
+    4: 'Day 4 — Heroes (2pts). Level up heroes. Double-dip: Hero XP scores Arms Race too.',
+    5: 'Day 5 — Training (2pts). Train troops. Double-dip: Troop training scores Arms Race too.',
+    6: 'Day 6 — Enemy Buster (4pts). HIGHEST VALUE DAY. Fight enemies, hit Infected Zones. Max Arms Race double-dip.',
+    7: 'Day 7 — Reset day. Alliance Duel is between cycles. Prepare for Day 1 tomorrow.',
+  };
+
+  return `You are Buddy — the personal AI commander coach for Last War: Survival.
+
+## This Commander's Profile
+- **Name:** ${profile.commander_name || 'Commander'}
+- **Server:** ${profile.server_number || 'Unknown'}
+- **Server Day:** ${profile.server_day || 'Unknown'}
+- **HQ Level:** ${profile.hq_level || 'Unknown'}
+- **Troop Tier:** ${profile.troop_tier || 'Unknown'}
+- **Troop Type:** ${profile.troop_type || 'Unknown'}
+- **Spend Style:** ${profile.spend_style || 'Unknown'}
+- **Playstyle:** ${profile.playstyle || 'Unknown'}
+- **Server Rank:** ${profile.server_rank || 'Unknown'}
+- **Hero Power:** ${profile.hero_power ? profile.hero_power + 'M' : 'Not set'}
+- **Total Power:** ${profile.total_power ? profile.total_power + 'M' : 'Not set'}
+- **Goals:** ${Array.isArray(profile.goals) ? (profile.goals as string[]).join(', ') : profile.goals || 'Not set'}
+- **Subscription Tier:** ${tier}
+
+## Today's Duel Status
+Alliance Duel — ${duelLabels[duel.day] || duel.label}
+
+## Your Mission
+Give this Commander specific, actionable advice. Always reference their actual profile data.
+Never give generic advice that ignores their server, tier, spend style, or goals.
+
+## Screenshot Analysis (when image provided)
+When the Commander uploads a screenshot of a Hot Deal / pack offer:
+1. Identify what's in the pack (resources, speedups, heroes, items)
+2. Give a clear BUY or SKIP recommendation
+3. Explain WHY based on: their spend style, current bottleneck, upcoming events, troop tier progress
+4. If the deal is genuinely good for their situation, say so clearly. If it's a trap, warn them.
+
+## Troop Counter Triangle
+Aircraft > Infantry > Tank > Aircraft. Missile Vehicle counters all but lower sustained power.
+
+## Def                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    ense System
+Squads engage sequentially by position (1→2→3→4). Position ≠ squad label. Analyze by position.
+
+## Arms Race
+Daily event. Double-dipping with Alliance Duel is the highest efficiency move in the game.
+Most players don't do this — always highlight it when relevant.
+
+## Style Rules
+- Be direct. Lead with the answer, then explain.
+- Use their name: "Commander ${profile.commander_name || 'Commander'}"
+- Max 3–5 action items unless they ask for more
+- No unnecessary preamble. No "Great question!" filler.
+- Tactical tone — like an advisor briefing a field commander.`;
 }
