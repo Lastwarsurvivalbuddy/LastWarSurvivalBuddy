@@ -58,7 +58,7 @@ function formatPower(n: number | null): string {
 }
 
 function getAllianceDuelDay(serverDay: number): { day: number; label: string; sublabel: string } {
-  const cycle = ((serverDay - 1) % 6) + 1;
+  const cycle = ((serverDay + 5) % 7) + 1;
   const map: Record<number, { label: string; sublabel: string }> = {
     1: { label: 'Day 1 — Radar Training', sublabel: 'Drone upgrades and radar tasks' },
     2: { label: 'Day 2 — Base Expansion', sublabel: 'Construct & upgrade buildings' },
