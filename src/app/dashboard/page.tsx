@@ -74,7 +74,7 @@ function getAllianceDuelDay(): { day: number; label: string; sublabel: string } 
   if (utcHour < resetHourUTC) {
     dayOfWeek = (dayOfWeek + 6) % 7;
   }
-  const dowToDuel: Record<number, number> = { 0: 1, 1: 2, 2: 3, 3: 4, 4: 5, 5: 6, 6: 7 };
+  const dowToDuel: Record<number, number> = { 4: 4, 5: 5, 6: 6, 0: 7, 1: 1, 2: 2, 3: 3 };
   const cycle = dowToDuel[dayOfWeek];
   const map: Record<number, { label: string; sublabel: string }> = {
     1: { label: 'Day 1 — Drones', sublabel: '1 alliance point — lowest value day' },
