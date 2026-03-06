@@ -48,9 +48,9 @@ export async function POST(req: NextRequest) {
 
       case 'invoice.paid': {
         const invoice = event.data.object as Stripe.Invoice
-        const subscriptionId = typeof invoice.subscription === 'string'
-          ? invoice.subscription
-          : invoice.subscription?.id
+        // In newer Stripe SDK, parent contains subscription info
+        const subscriptionId = (invoice as any).subscription
+          ?? (invoice as any).parent?.subscription_details?.subscription
         if (!subscriptionId) break
 
         const subscription = await stripe.subscriptions.retrieve(subscriptionId)
@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
         if (!userId) {
           const customerId = typeof subscription.customer === 'string'
             ? subscription.customer
-            : subscription.customer?.id
+            : (subscription.customer as Stripe.Customer)?.id
           if (customerId) {
             const { data: profile } = await supabaseAdmin
               .from('subscriptions')
