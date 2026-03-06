@@ -8,7 +8,7 @@ interface Message {
   id: string;
   role: 'user' | 'assistant';
   content: string;
-  imageUrl?: string; // base64 data URL for display
+  imageUrl?: string;
   timestamp: Date;
 }
 
@@ -38,6 +38,18 @@ export default function BuddyPage() {
     checkAuthAndLoadContext();
   }, []);
 
+  // Pre-fill from "Ask Buddy to go deeper" on dashboard
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const prefill = sessionStorage.getItem('buddy_prefill');
+      if (prefill) {
+        setInput(prefill);
+        sessionStorage.removeItem('buddy_prefill');
+        setTimeout(() => textareaRef.current?.focus(), 100);
+      }
+    }
+  }, []);
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isTyping]);
@@ -57,7 +69,6 @@ export default function BuddyPage() {
       return;
     }
 
-    // Load subscription tier
     const { data: sub } = await supabase
       .from('subscriptions')
       .select('tier')
@@ -65,7 +76,6 @@ export default function BuddyPage() {
       .single();
     if (sub) setTier(sub.tier);
 
-    // Load daily usage
     const today = new Date().toISOString().split('T')[0];
     const { data: usage } = await supabase
       .from('daily_usage')
@@ -91,13 +101,11 @@ export default function BuddyPage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate type
     if (!file.type.startsWith('image/')) {
       alert('Please upload an image file (PNG, JPG, WEBP).');
       return;
     }
 
-    // Validate size — 5MB max
     if (file.size > 5 * 1024 * 1024) {
       alert('Image must be under 5MB.');
       return;
@@ -106,14 +114,11 @@ export default function BuddyPage() {
     const reader = new FileReader();
     reader.onload = (ev) => {
       const dataUrl = ev.target?.result as string;
-      // Extract base64 portion
       const base64 = dataUrl.split(',')[1];
       const mimeType = file.type;
       setPendingImage({ dataUrl, base64, mimeType });
     };
     reader.readAsDataURL(file);
-
-    // Reset input so same file can be re-selected
     e.target.value = '';
   }
 
@@ -125,9 +130,8 @@ export default function BuddyPage() {
     const trimmed = input.trim();
     if ((!trimmed && !pendingImage) || isLoading) return;
 
-    // Check limit
     if (dailyLimit && dailyLimit.used >= dailyLimit.limit) {
-      return; // handled by UI gate below
+      return;
     }
 
     const userMessage: Message = {
@@ -178,7 +182,6 @@ export default function BuddyPage() {
       if (!res.ok) {
         const err = await res.json();
         if (res.status === 429) {
-          // Daily limit hit
           setMessages(prev => [...prev, {
             id: crypto.randomUUID(),
             role: 'assistant',
@@ -199,7 +202,6 @@ export default function BuddyPage() {
         timestamp: new Date(),
       }]);
 
-      // Update usage count
       setDailyLimit(prev => prev ? { ...prev, used: prev.used + 1 } : prev);
 
     } catch (err) {
@@ -308,7 +310,6 @@ export default function BuddyPage() {
 
       {/* Input area */}
       <footer className="input-area">
-        {/* Upgrade banner */}
         {isAtLimit && (
           <div className="limit-banner">
             <span>
@@ -324,7 +325,6 @@ export default function BuddyPage() {
           </div>
         )}
 
-        {/* Pending image preview */}
         {pendingImage && (
           <div className="pending-image-bar">
             <div className="pending-thumb-wrap">
@@ -335,7 +335,6 @@ export default function BuddyPage() {
           </div>
         )}
 
-        {/* Screenshot upload button */}
         <div className="screenshot-row">
           <button
             className="screenshot-btn"
@@ -355,7 +354,6 @@ export default function BuddyPage() {
           />
         </div>
 
-        {/* Text input row */}
         <div className="text-input-row">
           <textarea
             ref={textareaRef}
@@ -391,7 +389,6 @@ export default function BuddyPage() {
       </footer>
 
       <style jsx>{`
-        /* ─── Layout ─── */
         .buddy-wrap {
           display: flex;
           flex-direction: column;
@@ -403,8 +400,6 @@ export default function BuddyPage() {
           margin: 0 auto;
           position: relative;
         }
-
-        /* ─── Header ─── */
         .buddy-header {
           display: flex;
           align-items: center;
@@ -448,8 +443,6 @@ export default function BuddyPage() {
           text-align: right;
         }
         .usage-maxed { color: #c0392b; }
-
-        /* ─── Messages ─── */
         .messages-area {
           flex: 1;
           overflow-y: auto;
@@ -459,8 +452,6 @@ export default function BuddyPage() {
         .messages-area::-webkit-scrollbar { width: 4px; }
         .messages-area::-webkit-scrollbar-track { background: transparent; }
         .messages-area::-webkit-scrollbar-thumb { background: #1e2535; border-radius: 2px; }
-
-        /* ─── Empty state ─── */
         .empty-state {
           display: flex;
           flex-direction: column;
@@ -509,8 +500,6 @@ export default function BuddyPage() {
           border-color: #c9b87a;
           color: #c9b87a;
         }
-
-        /* ─── Message bubbles ─── */
         .messages-list { display: flex; flex-direction: column; gap: 18px; }
         .message-row {
           display: flex;
@@ -548,8 +537,6 @@ export default function BuddyPage() {
           color: #d0c9b5;
         }
         .bubble-text { white-space: pre-wrap; word-break: break-word; }
-
-        /* Image in bubble */
         .image-preview-in-bubble {
           margin-bottom: 10px;
           border-radius: 8px;
@@ -563,8 +550,6 @@ export default function BuddyPage() {
           display: block;
           background: #070a0f;
         }
-
-        /* Typing indicator */
         .typing-bubble {
           display: flex;
           gap: 5px;
@@ -584,8 +569,6 @@ export default function BuddyPage() {
           0%, 80%, 100% { opacity: 0.2; transform: scale(0.9); }
           40% { opacity: 1; transform: scale(1.1); }
         }
-
-        /* ─── Input area ─── */
         .input-area {
           background: #0d1017;
           border-top: 1px solid #1e2535;
@@ -595,8 +578,6 @@ export default function BuddyPage() {
           flex-direction: column;
           gap: 8px;
         }
-
-        /* Limit banner */
         .limit-banner {
           background: #1a0e0e;
           border: 1px solid #5c2222;
@@ -616,8 +597,6 @@ export default function BuddyPage() {
           letter-spacing: 0.03em;
         }
         .upgrade-link:hover { text-decoration: underline; }
-
-        /* Pending image preview bar */
         .pending-image-bar {
           display: flex;
           align-items: center;
@@ -662,8 +641,6 @@ export default function BuddyPage() {
           line-height: 1.4;
           font-style: italic;
         }
-
-        /* Screenshot button row */
         .screenshot-row {
           display: flex;
           align-items: center;
@@ -701,8 +678,6 @@ export default function BuddyPage() {
           letter-spacing: 0.08em;
           margin-left: 2px;
         }
-
-        /* Text input row */
         .text-input-row {
           display: flex;
           gap: 8px;
@@ -753,8 +728,6 @@ export default function BuddyPage() {
           display: block;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
-
-        /* ─── Responsive ─── */
         @media (max-width: 480px) {
           .messages-area { padding: 16px 12px 12px; }
           .input-area { padding: 10px 12px 14px; }
