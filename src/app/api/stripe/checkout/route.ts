@@ -1,10 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import Stripe from 'stripe'
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: '2024-12-18.acacia',
+})
 
 const PRICE_MAP: Record<string, string> = {
   pro:      process.env.STRIPE_PRICE_PRO!,
@@ -36,11 +41,6 @@ export async function POST(req: NextRequest) {
     if (!tier || !PRICE_MAP[tier]) {
       return NextResponse.json({ error: 'Invalid tier' }, { status: 400 })
     }
-
-    const Stripe = (await import('stripe')).default
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-      apiVersion: '2024-12-18.acacia',
-    })
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://lwsb.vercel.app'
 

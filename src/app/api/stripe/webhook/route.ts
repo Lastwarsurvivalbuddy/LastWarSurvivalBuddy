@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import Stripe from 'stripe'
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-// Required for raw body parsing (Stripe signature verification)
-export const config = { api: { bodyParser: false } }
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: '2024-12-18.acacia',
+})
 
 export async function POST(req: NextRequest) {
   const body = await req.text()
@@ -17,13 +19,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'No signature' }, { status: 400 })
   }
 
-  let event: any
+  let event: Stripe.Event
 
   try {
-    const Stripe = (await import('stripe')).default
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-      apiVersion: '2024-12-18.acacia',
-    })
     event = stripe.webhooks.constructEvent(
       body,
       sig,
@@ -34,55 +32,44 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: `Webhook Error: ${err.message}` }, { status: 400 })
   }
 
-  // Handle events
   try {
     switch (event.type) {
 
-      // ── One-time payment (Founding Member) ──
       case 'checkout.session.completed': {
-        const session = event.data.object
+        const session = event.data.object as Stripe.Checkout.Session
         const userId = session.metadata?.user_id
         const tier = session.metadata?.tier
-
         if (!userId || !tier) break
-
-        // For one-time payments, activate immediately
         if (session.mode === 'payment') {
           await upsertSubscription(userId, tier, 'active', null, session.id)
         }
-        // For subscriptions, wait for invoice.paid (more reliable)
         break
       }
 
-      // ── Subscription activated / renewed ──
       case 'invoice.paid': {
-        const invoice = event.data.object
-        const subscriptionId = invoice.subscription
+        const invoice = event.data.object as Stripe.Invoice
+        const subscriptionId = typeof invoice.subscription === 'string'
+          ? invoice.subscription
+          : invoice.subscription?.id
         if (!subscriptionId) break
 
-        const Stripe = (await import('stripe')).default
-        const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-          apiVersion: '2024-12-18.acacia',
-        })
         const subscription = await stripe.subscriptions.retrieve(subscriptionId)
         const userId = subscription.metadata?.user_id
         const tier = subscription.metadata?.tier
 
-        // Fallback: look up by stripe_customer_id if metadata missing
         if (!userId) {
-          const customerId = subscription.customer as string
-          const { data: profile } = await supabaseAdmin
-            .from('subscriptions')
-            .select('user_id')
-            .eq('stripe_customer_id', customerId)
-            .single()
-          if (profile) {
-            await upsertSubscription(
-              profile.user_id,
-              tier || 'pro',
-              'active',
-              subscriptionId
-            )
+          const customerId = typeof subscription.customer === 'string'
+            ? subscription.customer
+            : subscription.customer?.id
+          if (customerId) {
+            const { data: profile } = await supabaseAdmin
+              .from('subscriptions')
+              .select('user_id')
+              .eq('stripe_customer_id', customerId)
+              .single()
+            if (profile) {
+              await upsertSubscription(profile.user_id, tier || 'pro', 'active', subscriptionId)
+            }
           }
           break
         }
@@ -91,17 +78,13 @@ export async function POST(req: NextRequest) {
         break
       }
 
-      // ── Subscription cancelled / expired ──
       case 'customer.subscription.deleted': {
-        const subscription = event.data.object
-        const subscriptionId = subscription.id
-
+        const subscription = event.data.object as Stripe.Subscription
         const { data: sub } = await supabaseAdmin
           .from('subscriptions')
           .select('user_id')
-          .eq('stripe_subscription_id', subscriptionId)
+          .eq('stripe_subscription_id', subscription.id)
           .single()
-
         if (sub) {
           await supabaseAdmin
             .from('subscriptions')
@@ -111,37 +94,27 @@ export async function POST(req: NextRequest) {
         break
       }
 
-      // ── Subscription updated (plan change) ──
       case 'customer.subscription.updated': {
-        const subscription = event.data.object
-        const subscriptionId = subscription.id
-        const status = subscription.status // active, past_due, cancelled
-
+        const subscription = event.data.object as Stripe.Subscription
         const { data: sub } = await supabaseAdmin
           .from('subscriptions')
           .select('user_id')
-          .eq('stripe_subscription_id', subscriptionId)
+          .eq('stripe_subscription_id', subscription.id)
           .single()
-
         if (sub) {
           await supabaseAdmin
             .from('subscriptions')
-            .update({
-              status,
-              updated_at: new Date().toISOString(),
-            })
+            .update({ status: subscription.status, updated_at: new Date().toISOString() })
             .eq('user_id', sub.user_id)
         }
         break
       }
 
       default:
-        // Unhandled event — just acknowledge
         break
     }
   } catch (err: any) {
     console.error('Webhook handler error:', err)
-    // Still return 200 so Stripe doesn't retry
   }
 
   return NextResponse.json({ received: true })
@@ -168,7 +141,7 @@ async function upsertSubscription(
     .upsert(payload, { onConflict: 'user_id' })
 
   if (error) {
-    console.error('Supabase subscription upsert error:', error)
+    console.error('Supabase upsert error:', error)
     throw error
   }
 }
