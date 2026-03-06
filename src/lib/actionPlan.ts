@@ -22,6 +22,7 @@ export interface DailyAction {
   buddyPrompt: string
   points?: number
   timeRequired?: string
+  description?: string
 }
 
 export interface ActionPlanResult {
