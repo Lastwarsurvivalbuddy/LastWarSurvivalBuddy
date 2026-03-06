@@ -143,7 +143,7 @@ export function getDuelDay(): { day: number; label: string; points: number } {
 
 export interface CommanderProfile {
   hq_level: number
-  server_day: number
+  server_day?: number
   spend_style: string
   playstyle: string
   troop_type: string
@@ -297,6 +297,7 @@ export function generateActionPlan(profile: CommanderProfile): ActionPlanResult 
 
   const strategicInsight = getStrategicInsight(day, label, points, profile, maxHeroLevel, isDoubleDay)
 
+  // Sort by priority
   const priorityOrder: Record<ActionPriority, number> = { critical: 0, high: 1, medium: 2, low: 3 }
   actions.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority])
 
@@ -306,9 +307,11 @@ export function generateActionPlan(profile: CommanderProfile): ActionPlanResult 
     duelDayLabel: label,
     duelDayPoints: points,
     strategicInsight,
+    greeting: `Commander ${profile.hq_level ? `HQ ${profile.hq_level}` : ''}`,
+    dutyReport: `Server Day ${profile.server_day || '—'} · Duel Day ${day}: ${label}`,
+    insight: strategicInsight,
   }
 }
-
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function getHeroAction(
