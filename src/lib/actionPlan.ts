@@ -73,7 +73,7 @@ export function getMaxHeroLevelForHQ(hqLevel: number): number {
 }
 
 export function getNextHeroMilestone(hqLevel: number): { targetHQ: number; heroLevel: number } | null {
-  cconst entries = Object.entries(HQ_HERO_LEVEL_UNLOCK)
+  const entries = Object.entries(HQ_HERO_LEVEL_UNLOCK)
     .map(([hq, lvl]) => ({ targetHQ: Number(hq), heroLevel: lvl }))
     .filter(e => e.targetHQ > hqLevel)
     .sort((a, b) => a.targetHQ - b.targetHQ)
