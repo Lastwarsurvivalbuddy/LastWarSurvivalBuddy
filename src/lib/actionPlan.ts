@@ -19,10 +19,10 @@ export interface DailyAction {
   priority: ActionPriority
   title: string
   detail: string
+  description?: string      // ← add
   buddyPrompt: string
   points?: number
   timeRequired?: string
-  description?: string
 }
 
 export interface ActionPlanResult {
@@ -31,6 +31,9 @@ export interface ActionPlanResult {
   duelDayLabel: string
   duelDayPoints: number
   strategicInsight: string
+  greeting: string          // ← add
+  dutyReport: string        // ← add
+  insight: string           // ← add
 }
 
 // ─── Hero EXP Breakpoints ───────────────────────────────────────────────────
