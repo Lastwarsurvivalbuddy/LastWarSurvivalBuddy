@@ -1,5 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { getSkillMedalSummary } from '@/lib/skillMedals';
+import { getVIPSummary } from '@/lib/vipData';
+import { getGearSummary } from '@/lib/gearData';
+import { getBuildingSummary } from '@/lib/buildingData';
+import { getResourceNotesSummary } from '@/lib/resourceNotes';
+import { getT10Summary } from '@/lib/t10Data';
+import { getHQRequirementsSummary } from '@/lib/hqRequirementsData';
+import { getHealingSummary } from '@/lib/healingData';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -309,6 +317,27 @@ Squads engage sequentially by position (1→2→3→4). Position ≠ squad label
 ## Arms Race
 Daily event. Double-dipping with Alliance Duel is the highest efficiency move in the game.
 Most players don't do this — always highlight it when relevant.
+
+## Skill Medals
+${getSkillMedalSummary()}
+
+## VIP System
+${getVIPSummary()}
+
+## Gear System
+${getGearSummary()}
+
+## Buildings
+${getBuildingSummary()}
+
+## Resource Notes
+${getResourceNotesSummary()}
+
+## T10 Research\n${getT10Summary()}
+
+## HQ Requirements\n${getHQRequirementsSummary()}
+
+## Healing System\n${getHealingSummary()}
 
 ## Style Rules
 - Be direct. Lead with the answer, then explain.

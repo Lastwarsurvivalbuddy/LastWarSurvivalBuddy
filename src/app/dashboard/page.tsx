@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import DailyActionPlan from '@/components/DailyActionPlan'
+import TeachBuddy from '@/components/TeachBuddy'
 
 interface Profile {
   id: string
@@ -174,6 +175,7 @@ export default function Dashboard() {
         ══════════════════════════════════════════ */}
         <section className="pt-6 pb-2">
           <DailyActionPlan profile={profile} />
+          <TeachBuddy serverNumber={Number(profile.server_number)} />
         </section>
 
         {/* Divider */}
