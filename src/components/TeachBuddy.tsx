@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 
 const CATEGORIES = [
@@ -33,9 +33,31 @@ export default function TeachBuddy({
   const [screenshotPreview, setScreenshotPreview] = useState<string | null>(null)
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle')
   const [screenshotCount, setScreenshotCount] = useState(0)
+  const [countLoaded, setCountLoaded] = useState(false)
 
   const screenshotLimit = SCREENSHOT_LIMITS[tier] ?? 2
   const screenshotLimitReached = screenshotCount >= screenshotLimit
+
+  useEffect(() => {
+    loadScreenshotCount()
+  }, [])
+
+  async function loadScreenshotCount() {
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) return
+
+      const res = await fetch('/api/submissions', {
+        headers: { 'Authorization': `Bearer ${session.access_token}` }
+      })
+      const data = await res.json()
+      setScreenshotCount(data.count ?? 0)
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setCountLoaded(true)
+    }
+  }
 
   function handleScreenshotChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -67,7 +89,6 @@ export default function TeachBuddy({
           .upload(path, screenshot)
         if (uploadError) throw uploadError
         screenshot_path = path
-        setScreenshotCount(c => c + 1)
       }
 
       const res = await fetch('/api/submissions', {
@@ -85,7 +106,17 @@ export default function TeachBuddy({
         })
       })
 
-      if (!res.ok) throw new Error('Failed to submit')
+      if (!res.ok) {
+        const err = await res.json()
+        if (res.status === 429) {
+          setStatus('error')
+          setTimeout(() => setStatus('idle'), 3000)
+          return
+        }
+        throw new Error(err.error)
+      }
+
+      if (screenshot_path) setScreenshotCount(c => c + 1)
 
       setStatus('success')
       setClaim('')
@@ -239,10 +270,12 @@ export default function TeachBuddy({
               type="file"
               accept="image/*"
               onChange={handleScreenshotChange}
-              disabled={screenshotLimitReached}
+              disabled={screenshotLimitReached || !countLoaded}
               style={{ display: 'none' }}
             />
-            📸 {screenshotLimitReached
+            📸 {!countLoaded
+              ? 'Loading...'
+              : screenshotLimitReached
               ? `Daily screenshot limit reached (${screenshotLimit}/day)`
               : `Attach a screenshot (optional) · ${screenshotCount}/${screenshotLimit} today`}
           </label>
@@ -258,8 +291,8 @@ export default function TeachBuddy({
           padding: '12px',
           borderRadius: '8px',
           border: 'none',
-          background: status === 'success' ? '#22c55e' : '#f0c040',
-          color: '#0d0d1a',
+          background: status === 'success' ? '#22c55e' : status === 'error' ? '#ef4444' : '#f0c040',
+          color: status === 'error' ? '#fff' : '#0d0d1a',
           fontWeight: 700,
           fontSize: '14px',
           cursor: claim.trim() ? 'pointer' : 'not-allowed',
