@@ -24,6 +24,9 @@ export default function AdminSubmissions() {
   const [loading, setLoading] = useState(true)
   const [screenshotUrls, setScreenshotUrls] = useState<Record<string, string>>({})
   const [acting, setActing] = useState<string | null>(null)
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editClaim, setEditClaim] = useState('')
+  const [editScope, setEditScope] = useState('')
 
   useEffect(() => {
     checkAdminAndLoad()
@@ -46,7 +49,6 @@ export default function AdminSubmissions() {
     const data = await res.json()
     setSubmissions(data.submissions ?? [])
 
-    // Load screenshot URLs
     const urls: Record<string, string> = {}
     for (const sub of data.submissions ?? []) {
       if (sub.screenshot_path) {
@@ -76,6 +78,33 @@ export default function AdminSubmissions() {
 
     setSubmissions(prev => prev.filter(s => s.id !== id))
     setActing(null)
+  }
+
+  async function handleSaveEdit(id: string) {
+    setActing(id)
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) return
+
+    await fetch('/api/admin/submissions', {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`
+      },
+      body: JSON.stringify({ id, claim: editClaim, scope: editScope })
+    })
+
+    setSubmissions(prev => prev.map(s =>
+      s.id === id ? { ...s, claim: editClaim, scope: editScope } : s
+    ))
+    setEditingId(null)
+    setActing(null)
+  }
+
+  function startEdit(sub: Submission) {
+    setEditingId(sub.id)
+    setEditClaim(sub.claim)
+    setEditScope(sub.scope)
   }
 
   const pending = submissions.filter(s => s.status === 'pending')
@@ -122,26 +151,69 @@ export default function AdminSubmissions() {
             }}>
               {sub.category}
             </span>
-            <span style={{
-              background: sub.scope === 'global' ? '#3b82f620' : '#22c55e20',
-              color: sub.scope === 'global' ? '#3b82f6' : '#22c55e',
-              border: `1px solid ${sub.scope === 'global' ? '#3b82f640' : '#22c55e40'}`,
-              borderRadius: '12px',
-              padding: '2px 10px',
-              fontSize: '11px',
-              fontWeight: 700,
-              textTransform: 'uppercase'
-            }}>
-              {sub.scope === 'global' ? '🌐 Global' : `🎯 Server ${sub.server_number}`}
-            </span>
+
+            {/* Scope — toggleable in edit mode */}
+            {editingId === sub.id ? (
+              <button
+                onClick={() => setEditScope(editScope === 'global' ? 'server_specific' : 'global')}
+                style={{
+                  background: editScope === 'global' ? '#3b82f620' : '#22c55e20',
+                  color: editScope === 'global' ? '#3b82f6' : '#22c55e',
+                  border: `1px solid ${editScope === 'global' ? '#3b82f640' : '#22c55e40'}`,
+                  borderRadius: '12px',
+                  padding: '2px 10px',
+                  fontSize: '11px',
+                  fontWeight: 700,
+                  textTransform: 'uppercase',
+                  cursor: 'pointer'
+                }}
+              >
+                {editScope === 'global' ? '🌐 Global' : `🎯 Server ${sub.server_number}`} ⇄
+              </button>
+            ) : (
+              <span style={{
+                background: sub.scope === 'global' ? '#3b82f620' : '#22c55e20',
+                color: sub.scope === 'global' ? '#3b82f6' : '#22c55e',
+                border: `1px solid ${sub.scope === 'global' ? '#3b82f640' : '#22c55e40'}`,
+                borderRadius: '12px',
+                padding: '2px 10px',
+                fontSize: '11px',
+                fontWeight: 700,
+                textTransform: 'uppercase'
+              }}>
+                {sub.scope === 'global' ? '🌐 Global' : `🎯 Server ${sub.server_number}`}
+              </span>
+            )}
+
             <span style={{ color: '#555', fontSize: '11px', marginLeft: 'auto' }}>
               {new Date(sub.created_at).toLocaleDateString()}
             </span>
           </div>
 
-          <p style={{ color: '#fff', fontSize: '15px', margin: '0 0 12px 0', lineHeight: 1.5 }}>
-            {sub.claim}
-          </p>
+          {/* Claim — editable in edit mode */}
+          {editingId === sub.id ? (
+            <textarea
+              value={editClaim}
+              onChange={e => setEditClaim(e.target.value)}
+              style={{
+                width: '100%',
+                minHeight: '80px',
+                background: '#0d0d1a',
+                border: '1px solid #f0c04060',
+                borderRadius: '8px',
+                color: '#fff',
+                fontSize: '15px',
+                padding: '10px',
+                marginBottom: '12px',
+                resize: 'vertical',
+                boxSizing: 'border-box'
+              }}
+            />
+          ) : (
+            <p style={{ color: '#fff', fontSize: '15px', margin: '0 0 12px 0', lineHeight: 1.5 }}>
+              {sub.claim}
+            </p>
+          )}
 
           {screenshotUrls[sub.id] && (
             <img
@@ -158,44 +230,99 @@ export default function AdminSubmissions() {
             />
           )}
 
-          <div style={{ display: 'flex', gap: '10px' }}>
-            <button
-              onClick={() => handleAction(sub.id, 'approved')}
-              disabled={acting === sub.id}
-              style={{
-                flex: 1,
-                padding: '10px',
-                borderRadius: '8px',
-                border: 'none',
-                background: '#22c55e',
-                color: '#000',
-                fontWeight: 700,
-                fontSize: '14px',
-                cursor: 'pointer',
-                opacity: acting === sub.id ? 0.5 : 1
-              }}
-            >
-              ✓ Approve
-            </button>
-            <button
-              onClick={() => handleAction(sub.id, 'rejected')}
-              disabled={acting === sub.id}
-              style={{
-                flex: 1,
-                padding: '10px',
-                borderRadius: '8px',
-                border: 'none',
-                background: '#ef4444',
-                color: '#fff',
-                fontWeight: 700,
-                fontSize: '14px',
-                cursor: 'pointer',
-                opacity: acting === sub.id ? 0.5 : 1
-              }}
-            >
-              ✕ Reject
-            </button>
-          </div>
+          {editingId === sub.id ? (
+            // Edit mode buttons
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button
+                onClick={() => handleSaveEdit(sub.id)}
+                disabled={acting === sub.id}
+                style={{
+                  flex: 1,
+                  padding: '10px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  background: '#f0c040',
+                  color: '#000',
+                  fontWeight: 700,
+                  fontSize: '14px',
+                  cursor: 'pointer',
+                  opacity: acting === sub.id ? 0.5 : 1
+                }}
+              >
+                💾 Save Changes
+              </button>
+              <button
+                onClick={() => setEditingId(null)}
+                style={{
+                  padding: '10px 20px',
+                  borderRadius: '8px',
+                  border: '1px solid #2a2a4a',
+                  background: 'transparent',
+                  color: '#888',
+                  fontWeight: 700,
+                  fontSize: '14px',
+                  cursor: 'pointer'
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          ) : (
+            // Normal mode buttons
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button
+                onClick={() => handleAction(sub.id, 'approved')}
+                disabled={acting === sub.id}
+                style={{
+                  flex: 1,
+                  padding: '10px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  background: '#22c55e',
+                  color: '#000',
+                  fontWeight: 700,
+                  fontSize: '14px',
+                  cursor: 'pointer',
+                  opacity: acting === sub.id ? 0.5 : 1
+                }}
+              >
+                ✓ Approve
+              </button>
+              <button
+                onClick={() => startEdit(sub)}
+                style={{
+                  padding: '10px 20px',
+                  borderRadius: '8px',
+                  border: '1px solid #f0c04060',
+                  background: 'transparent',
+                  color: '#f0c040',
+                  fontWeight: 700,
+                  fontSize: '14px',
+                  cursor: 'pointer'
+                }}
+              >
+                ✎ Edit
+              </button>
+              <button
+                onClick={() => handleAction(sub.id, 'rejected')}
+                disabled={acting === sub.id}
+                style={{
+                  flex: 1,
+                  padding: '10px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  background: '#ef4444',
+                  color: '#fff',
+                  fontWeight: 700,
+                  fontSize: '14px',
+                  cursor: 'pointer',
+                  opacity: acting === sub.id ? 0.5 : 1
+                }}
+              >
+                ✕ Reject
+              </button>
+            </div>
+          )}
         </div>
       ))}
     </div>
