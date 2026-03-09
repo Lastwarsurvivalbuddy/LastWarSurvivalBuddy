@@ -280,7 +280,7 @@ function CommanderCard({
           {[
             { label: 'HQ',        value: profile.hq_level ? `HQ ${profile.hq_level}` : '—' },
             { label: 'Troops',    value: formatTroopTier(profile.troop_tier) },
-            { label: 'Type',      value: formatTroopType(profile.troop_type) },
+            { label: 'Squad 1 Type', value: formatTroopType(profile.troop_type) },
             { label: 'Squad 1',   value: squadPower },
             { label: 'Rank',      value: rank },
             { label: 'Kill Tier', value: killTitle ?? '—' },
