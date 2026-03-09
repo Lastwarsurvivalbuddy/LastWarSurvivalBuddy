@@ -37,10 +37,14 @@ const TIER_LIMITS: Record<string, { questions: number; screenshots: number }> = 
 };
 
 // ─── Duel day calculation ───
+// Reset is 8pm CT daily.
+// CT = UTC-6 standard, UTC-5 DST (second Sunday March → first Sunday November)
+// Mon=Day1 Radar Training, Tue=Day2 Base Expansion, Wed=Day3 Age of Science,
+// Thu=Day4 Train Heroes, Fri=Day5 Total Mobilization, Sat=Day6 Enemy Buster, Sun=Day7 Reset
 function getCurrentDuelDay(): { day: number; label: string } {
   const now = new Date();
 
-  // Determine if US DST is active (second Sunday in March → first Sunday in November)
+  // Determine DST — second Sunday in March to first Sunday in November
   const year = now.getUTCFullYear();
 
   const dstStart = new Date(Date.UTC(year, 2, 1)); // March 1
@@ -51,26 +55,28 @@ function getCurrentDuelDay(): { day: number; label: string } {
 
   const isDST = now >= dstStart && now < dstEnd;
 
-  // CT = UTC-6 standard, UTC-5 DST
-  // Reset is 8pm CT = 2am UTC standard, 1am UTC DST
-  const offsetHours = isDST ? 5 : 6;
+  // Convert now to CT
+  const ctOffsetMs = (isDST ? 5 : 6) * 60 * 60 * 1000;
+  const ctNow = new Date(now.getTime() - ctOffsetMs);
 
-  // Shift time back by CT offset, then back 20 more hours so that
-  // the UTC day boundary (midnight) aligns with the 8pm CT reset
-  const adjusted = new Date(now.getTime() - (offsetHours + 20) * 60 * 60 * 1000);
-  const utcDay = adjusted.getUTCDay();
+  // If CT time is 8pm (20:00) or later, the duel has already reset — advance to next day
+  const ctHour = ctNow.getUTCHours();
+  const ctDay = ctHour >= 20
+    ? (ctNow.getUTCDay() + 1) % 7  // post-reset: next weekday
+    : ctNow.getUTCDay();            // pre-reset: current CT weekday
 
+  // 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat, 0=Sun
   const schedule: Record<number, { day: number; label: string }> = {
-    1: { day: 1, label: 'Radar Training (1pt)'       },
-    2: { day: 2, label: 'Base Expansion (2pts)'       },
-    3: { day: 3, label: 'Age of Science (2pts)'       },
-    4: { day: 4, label: 'Train Heroes (2pts)'         },
-    5: { day: 5, label: 'Total Mobilization (2pts)'   },
-    6: { day: 6, label: 'Enemy Buster (4pts)'         },
-    0: { day: 7, label: 'Reset'                       },
+    1: { day: 1, label: 'Radar Training (1pt)'      },
+    2: { day: 2, label: 'Base Expansion (2pts)'      },
+    3: { day: 3, label: 'Age of Science (2pts)'      },
+    4: { day: 4, label: 'Train Heroes (2pts)'        },
+    5: { day: 5, label: 'Total Mobilization (2pts)'  },
+    6: { day: 6, label: 'Enemy Buster (4pts)'        },
+    0: { day: 7, label: 'Reset'                      },
   };
 
-  return schedule[utcDay] ?? { day: 1, label: 'Radar Training (1pt)' };
+  return schedule[ctDay] ?? { day: 1, label: 'Radar Training (1pt)' };
 }
 
 export async function POST(req: NextRequest) {
