@@ -1,196 +1,222 @@
-/**
- * hqRequirementsData.ts
- * HQ Upgrade Requirements Data for Last War: Survival Buddy
- *
- * Source: lastwarhandbook.com/calculators/hq-requirements
- * Confirmed: Milestones, resource types, Age of Oil trigger, cumulative totals HQ 1→25
- * PENDING: Per-level resource costs, per-level building prerequisites (client-rendered)
- * Update target: cpt-hedge.com data OR manual calculator scrape
- *
- * Last updated: March 6, 2026
- */
+// src/lib/hqRequirementsData.ts
+// HQ upgrade requirements — scraped from dracgon.tech (verified March 2026)
+// Each entry = what you need to upgrade TO that HQ level
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
-export interface HQCost {
-  iron: number;
-  food: number;
-  gold: number;
-  oil: number;           // 0 before HQ 25, required from HQ 25+
-  timeSeconds: number;
+export interface HQRequirement {
+  hq: number;
+  buildings: { name: string; level: number }[];
+  resources: { iron?: string; food?: string; gold?: string; oil?: string };
 }
 
-export interface HQMilestone {
-  hqLevel: number;
-  label: string;
-  description: string;
-}
-
-export interface HQLevelData {
-  level: number;
-  cost: HQCost | null;           // null = PENDING per-level data
-  prerequisites: string[] | null; // null = PENDING — building names + levels required
-  powerGain: number | null;       // null = PENDING
-  unlocks: string[];              // confirmed unlocks at this level
-}
-
-// ─── Key Milestones — CONFIRMED ✅ ────────────────────────────────────────────
-// Source: FAQ schema + rendered milestone badges in HTML
-
-export const HQ_MILESTONES: HQMilestone[] = [
+export const HQ_REQUIREMENTS: HQRequirement[] = [
   {
-    hqLevel: 10,
-    label: 'T5 Troops',
-    description: 'Unlocks T5 troop training',
+    hq: 2,
+    buildings: [{ name: 'Drill Ground', level: 1 }, { name: 'Squad 1', level: 1 }],
+    resources: { iron: '68', food: '68' },
   },
   {
-    hqLevel: 15,
-    label: 'Ultimate Skill',
-    description: 'Unlocks hero Ultimate Skill slot',
+    hq: 3,
+    buildings: [{ name: 'Wall', level: 2 }],
+    resources: { iron: '1K', food: '1K' },
   },
   {
-    hqLevel: 20,
-    label: 'Special Forces Research',
-    description: 'Unlocks Special Forces research tree — path to T10',
+    hq: 4,
+    buildings: [{ name: 'Barracks', level: 3 }, { name: 'Drill Ground', level: 3 }],
+    resources: { iron: '2.5K', food: '2.5K' },
   },
   {
-    hqLevel: 25,
-    label: 'Age of Oil',
-    description: 'Oil becomes required resource for HQ upgrades. Unlocks oil buildings and research.',
+    hq: 5,
+    buildings: [{ name: 'Barracks', level: 4 }, { name: 'Wall', level: 4 }],
+    resources: { iron: '20K', food: '20K' },
   },
   {
-    hqLevel: 28,
-    label: 'T10 Research Path',
-    description: 'T10 troop research path becomes available',
+    hq: 6,
+    buildings: [{ name: 'Wall', level: 5 }, { name: 'Drill Ground', level: 5 }],
+    resources: { iron: '91K', food: '91K' },
   },
   {
-    hqLevel: 35,
-    label: 'Maximum HQ',
-    description: 'Max level. Unlocks all content including Hero Level 175 cap.',
+    hq: 7,
+    buildings: [{ name: 'Wall', level: 6 }, { name: 'Tank Center', level: 6 }],
+    resources: { iron: '240K', food: '240K' },
+  },
+  {
+    hq: 8,
+    buildings: [{ name: 'Tech Center', level: 7 }, { name: 'Alliance Center', level: 7 }],
+    resources: { iron: '390K', food: '390K' },
+  },
+  {
+    hq: 9,
+    buildings: [{ name: 'Tech Center', level: 8 }, { name: 'Tank Center', level: 8 }],
+    resources: { iron: '620K', food: '620K', gold: '200K' },
+  },
+  {
+    hq: 10,
+    buildings: [{ name: 'Tech Center', level: 9 }, { name: 'Hospital', level: 9 }],
+    resources: { iron: '750K', food: '750K', gold: '240K' },
+  },
+  {
+    hq: 11,
+    buildings: [{ name: 'Tech Center', level: 10 }, { name: 'Wall', level: 10 }],
+    resources: { iron: '1.9M', food: '1.9M', gold: '600K' },
+  },
+  {
+    hq: 12,
+    buildings: [{ name: 'Tech Center', level: 11 }, { name: 'Barracks', level: 11 }],
+    resources: { iron: '3.2M', food: '3.2M', gold: '1M' },
+  },
+  {
+    hq: 13,
+    buildings: [{ name: 'Tech Center', level: 12 }, { name: 'Tank Center', level: 12 }],
+    resources: { iron: '3.5M', food: '3.5M', gold: '1.1M' },
+  },
+  {
+    hq: 14,
+    buildings: [{ name: 'Tech Center', level: 13 }, { name: 'Drill Ground', level: 13 }],
+    resources: { iron: '4.9M', food: '4.9M', gold: '1.6M' },
+  },
+  {
+    hq: 15,
+    buildings: [{ name: 'Tech Center', level: 14 }, { name: 'Wall', level: 14 }],
+    resources: { iron: '6.8M', food: '6.8M', gold: '2.2M' },
+  },
+  {
+    hq: 16,
+    buildings: [{ name: 'Tech Center', level: 15 }, { name: 'Alliance Center', level: 15 }],
+    resources: { iron: '12M', food: '12M', gold: '3.9M' },
+  },
+  {
+    hq: 17,
+    buildings: [{ name: 'Tech Center', level: 16 }, { name: 'Tank Center', level: 16 }],
+    resources: { iron: '16M', food: '16M', gold: '5.1M' },
+  },
+  {
+    hq: 18,
+    buildings: [{ name: 'Tech Center', level: 17 }, { name: 'Hospital', level: 17 }],
+    resources: { iron: '28M', food: '28M', gold: '8.9M' },
+  },
+  {
+    hq: 19,
+    buildings: [{ name: 'Tech Center', level: 18 }, { name: 'Wall', level: 18 }],
+    resources: { iron: '33M', food: '33M', gold: '11M' },
+  },
+  {
+    hq: 20,
+    buildings: [{ name: 'Tech Center', level: 19 }, { name: 'Barracks', level: 19 }],
+    resources: { iron: '60M', food: '60M', gold: '19M' },
+  },
+  {
+    hq: 21,
+    buildings: [{ name: 'Tech Center', level: 20 }, { name: 'Tank Center', level: 20 }],
+    resources: { iron: '84M', food: '84M', gold: '27M' },
+  },
+  {
+    hq: 22,
+    buildings: [{ name: 'Tech Center', level: 21 }, { name: 'Drill Ground', level: 21 }],
+    resources: { iron: '110M', food: '110M', gold: '35M' },
+  },
+  {
+    hq: 23,
+    buildings: [{ name: 'Tech Center', level: 22 }, { name: 'Wall', level: 22 }],
+    resources: { iron: '140M', food: '140M', gold: '44M' },
+  },
+  {
+    hq: 24,
+    buildings: [{ name: 'Tech Center', level: 23 }, { name: 'Alliance Center', level: 23 }],
+    resources: { iron: '170M', food: '170M', gold: '54M' },
+  },
+  {
+    hq: 25,
+    buildings: [{ name: 'Tech Center', level: 24 }, { name: 'Tank Center', level: 24 }],
+    resources: { iron: '290M', food: '290M', gold: '93M' },
+  },
+  {
+    hq: 26,
+    buildings: [{ name: 'Tech Center', level: 25 }, { name: 'Hospital', level: 25 }],
+    resources: { iron: '400M', food: '400M', gold: '130M' },
+  },
+  {
+    hq: 27,
+    buildings: [{ name: 'Tech Center', level: 26 }, { name: 'Wall', level: 26 }],
+    resources: { iron: '530M', food: '530M', gold: '170M' },
+  },
+  {
+    hq: 28,
+    buildings: [{ name: 'Tech Center', level: 27 }, { name: 'Barracks', level: 27 }],
+    resources: { iron: '740M', food: '740M', gold: '240M' },
+  },
+  {
+    hq: 29,
+    buildings: [{ name: 'Tech Center', level: 28 }, { name: 'Tank Center', level: 28 }],
+    resources: { iron: '1G', food: '1G', gold: '330M' },
+  },
+  {
+    hq: 30,
+    buildings: [{ name: 'Tech Center', level: 29 }, { name: 'Drill Ground', level: 29 }],
+    resources: { iron: '1.4G', food: '1.4G', gold: '460M' },
+  },
+  // HQ 31+ requires Oil — T11 territory
+  {
+    hq: 31,
+    buildings: [
+      { name: 'Tech Center', level: 30 }, { name: 'Barracks', level: 30 },
+      { name: 'Tank Center', level: 30 }, { name: 'Air Center', level: 30 },
+      { name: 'Missile Center', level: 30 },
+    ],
+    resources: { iron: '1.6G', food: '1.6G', gold: '510M', oil: '1.44M' },
+  },
+  {
+    hq: 32,
+    buildings: [
+      { name: 'Tech Center', level: 31 }, { name: 'Barracks', level: 31 },
+      { name: 'Wall', level: 31 }, { name: 'Tank Center', level: 31 },
+      { name: 'Air Center', level: 31 }, { name: 'Missile Center', level: 31 },
+    ],
+    resources: { iron: '1.7G', food: '1.7G', gold: '560M', oil: '2.3M' },
+  },
+  {
+    hq: 33,
+    buildings: [
+      { name: 'Tech Center', level: 32 }, { name: 'Barracks', level: 32 },
+      { name: 'Tank Center', level: 32 }, { name: 'Air Center', level: 32 },
+      { name: 'Missile Center', level: 32 }, { name: 'Drill Ground', level: 32 },
+      { name: 'Hospital', level: 32 },
+    ],
+    resources: { iron: '1.9G', food: '1.9G', gold: '620M', oil: '3.92M' },
+  },
+  {
+    hq: 34,
+    buildings: [
+      { name: 'Tech Center', level: 33 }, { name: 'Barracks', level: 33 },
+      { name: 'Wall', level: 33 }, { name: 'Tank Center', level: 33 },
+      { name: 'Air Center', level: 33 }, { name: 'Missile Center', level: 33 },
+      { name: 'Alliance Center', level: 33 },
+    ],
+    resources: { iron: '2G', food: '2G', gold: '650M', oil: '7.05M' },
+  },
+  {
+    hq: 35,
+    buildings: [
+      { name: 'Tech Center', level: 34 }, { name: 'Tank Center', level: 34 },
+      { name: 'Barracks', level: 34 }, { name: 'Hospital', level: 34 },
+      { name: 'Drill Ground', level: 34 },
+    ],
+    resources: { iron: '2G', food: '2G', gold: '650M', oil: '7.05M' },
   },
 ];
 
-// ─── Confirmed Cumulative Totals ✅ ───────────────────────────────────────────
-// Source: Calculator default state rendered in HTML (HQ 1 → HQ 25, 0% speed buff)
-// These are the CUMULATIVE costs from HQ 1 to HQ 25.
-
-export const HQ_CUMULATIVE_CONFIRMED = {
-  hq1_to_25: {
-    iron: 424_441_000,       // 424.44M ✅
-    food: 424_441_000,       // 424.44M ✅
-    gold: 84_888_200,        // 84.89M ✅
-    oil: 5_000_000,          // 5.00M ✅ (oil only applies at HQ 25 itself)
-    timeSeconds: 1_614_840,  // 18d 15h 14m ✅ (at 0% speed buff)
-    powerGain: 3_113_000,    // 3.11M power ✅
-  },
-} as const;
-
-// ─── Resource Types — CONFIRMED ✅ ───────────────────────────────────────────
-export const HQ_RESOURCE_TYPES = ['iron', 'food', 'gold', 'oil', 'time'] as const;
-
-// ─── Prerequisite Building Categories — CONFIRMED ✅ ─────────────────────────
-// These building types are confirmed as HQ prerequisites.
-// Exact level requirements per HQ level are PENDING.
-export const HQ_PREREQUISITE_BUILDINGS = [
-  'Barracks',
-  'Research Center',
-  'Iron Mine',
-  'Farm',
-  'Hospital',
-  'Wall',
-  'Oil Refinery', // required from HQ 25+
-] as const;
-
-// ─── HQ Level Registry ───────────────────────────────────────────────────────
-// Structural scaffold — per-level costs and prerequisites PENDING.
-// Unlocks populated where confirmed from milestone data.
-
-export const HQ_LEVELS: HQLevelData[] = Array.from({ length: 35 }, (_, i) => {
-  const level = i + 1;
-  const unlocks: string[] = [];
-
-  if (level === 10) unlocks.push('T5 Troops');
-  if (level === 15) unlocks.push('Ultimate Skill');
-  if (level === 20) unlocks.push('Special Forces Research');
-  if (level === 25) unlocks.push('Age of Oil', 'Oil Refinery buildings', 'Oil Research');
-  if (level === 28) unlocks.push('T10 Research Path');
-  if (level === 35) unlocks.push('Maximum Level', 'Hero Level 175 cap');
-
-  return {
-    level,
-    cost: null,         // ⚠️ PENDING — cpt-hedge or manual scrape
-    prerequisites: null, // ⚠️ PENDING
-    powerGain: null,    // ⚠️ PENDING
-    unlocks,
-  };
-});
-
-// ─── Helper: Get Milestone for HQ Level ──────────────────────────────────────
-
-export function getMilestoneAtLevel(hqLevel: number): HQMilestone | null {
-  return HQ_MILESTONES.find((m) => m.hqLevel === hqLevel) ?? null;
+// Helper: get requirements for a specific HQ level
+export function getHQRequirements(hqLevel: number): HQRequirement | undefined {
+  return HQ_REQUIREMENTS.find(r => r.hq === hqLevel);
 }
 
-/**
- * Returns all milestones a player will pass going from currentHQ to targetHQ.
- */
-export function getMilestonesInRange(currentHQ: number, targetHQ: number): HQMilestone[] {
-  return HQ_MILESTONES.filter(
-    (m) => m.hqLevel > currentHQ && m.hqLevel <= targetHQ
-  );
-}
-
-/**
- * Returns the next milestone above the player's current HQ level.
- */
-export function getNextMilestone(currentHQ: number): HQMilestone | null {
-  return HQ_MILESTONES.find((m) => m.hqLevel > currentHQ) ?? null;
-}
-
-/**
- * Returns true if this HQ level triggers Age of Oil (oil becomes required).
- */
-export function isAgeOfOilLevel(hqLevel: number): boolean {
-  return hqLevel >= 25;
-}
-
-/**
- * Returns true if player is approaching Age of Oil and should prepare.
- * Warning window: HQ 22–24.
- */
-export function shouldWarnAgeOfOil(currentHQ: number): boolean {
-  return currentHQ >= 22 && currentHQ < 25;
-}
-
-// ─── Buddy System Prompt Summary ─────────────────────────────────────────────
-
-export function getHQRequirementsSummary(): string {
-  return `
-## HQ Requirements
-
-HQ max level is 35. Resources required: Iron, Food, Gold, Oil (from HQ 25+), and Time.
-
-**Key milestones:**
-- HQ 10: T5 Troops unlock
-- HQ 15: Ultimate Skill unlock
-- HQ 20: Special Forces Research unlock (path to T10 troops)
-- HQ 25: Age of Oil begins — oil becomes required for all future HQ upgrades
-- HQ 28: T10 Research Path available
-- HQ 35: Maximum level — Hero Level 175 cap unlocked
-
-**Cumulative cost HQ 1→25 (confirmed):**
-- Iron: 424.4M | Food: 424.4M | Gold: 84.9M | Oil: 5M
-- Time: 18d 15h 14m (at 0% construction buff)
-- Power gain: 3.11M
-
-**Building prerequisites** (exact levels PENDING): Barracks, Research Center, Iron Mine, Farm, Hospital, Wall, Oil Refinery (HQ 25+).
-
-**Key advice:**
-- Upgrade Oil Refinery early — oil becomes the bottleneck at HQ 25+
-- Construction speed (VIP, heroes, gear) becomes critical at HQ 20+
-- Clear prerequisite building chain before attempting HQ upgrade
-- Most useful decision point: HQ 20+ when requirement chain stacks
-
-⚠️ Per-level costs and exact building prerequisites pending cpt-hedge data.
-`.trim();
+// Helper: get a plain-English summary for Buddy injection
+export function getHQSummary(): string {
+  const lines = HQ_REQUIREMENTS.map(r => {
+    const buildings = r.buildings.map(b => `${b.name} Lv${b.level}`).join(', ');
+    const res = Object.entries(r.resources)
+      .map(([k, v]) => `${v} ${k}`)
+      .join(' / ');
+    return `HQ ${r.hq}: requires ${buildings} | Cost: ${res}`;
+  });
+  return `## HQ Upgrade Requirements\nSource: dracgon.tech (verified)\nNote: Oil required starting at HQ 31.\n\n${lines.join('\n')}`;
 }

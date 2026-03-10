@@ -6,7 +6,7 @@ import { getGearSummary } from '@/lib/gearData';
 import { getBuildingSummary } from '@/lib/buildingData';
 import { getResourceNotesSummary } from '@/lib/resourceNotes';
 import { getT10Summary } from '@/lib/t10Data';
-import { getHQRequirementsSummary } from '@/lib/hqRequirementsData';
+import { getHQSummary } from '@/lib/hqRequirementsData';
 import { getHealingSummary } from '@/lib/healingData';
 import { getApprovedSubmissions } from '@/lib/submissionData';
 import { incrementStreak } from '@/lib/streak';
@@ -294,10 +294,10 @@ Keep responses concise, specific, and tactical. No fluff.`;
     : 'Not set';
 
   const troopTierDisplay: Record<string, string> = {
-  under_t10: 'Under T10 — working toward T10 unlock',
-  t10:       'T10 — unlocked and training. Do NOT recommend T10 research nodes as a goal — assume T10 research is complete.',
-  t11:       'T11 — Armament Research system active. T10 research tree is fully complete. Do NOT recommend T10 research nodes.',
-};
+    under_t10: 'Under T10 — working toward T10 unlock',
+    t10:       'T10 — unlocked and training. Do NOT recommend T10 research nodes as a goal — assume T10 research is complete.',
+    t11:       'T11 — Armament Research system active. T10 research tree is fully complete. Do NOT recommend T10 research nodes.',
+  };
 
   const duelLabels: Record<number, string> = {
     1: "Day 1 — Radar Training (1pt). Lowest value day. Use it for housekeeping, don't burn big speedups.",
@@ -379,7 +379,7 @@ ${getResourceNotesSummary()}
 ${getT10Summary()}
 
 ## HQ Requirements
-${getHQRequirementsSummary()}
+${getHQSummary()}
 
 ## Healing System
 ${getHealingSummary()}
