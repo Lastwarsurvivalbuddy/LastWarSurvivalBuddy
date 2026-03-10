@@ -110,14 +110,29 @@ const exportCard = async (format: 'png' | 'jpg') => {
     const quality = format === 'jpg' ? 0.95 : undefined;
     const url = canvas.toDataURL(mimeType, quality);
 
-    // iOS Safari — open image in new tab so user can long-press → Save to Photos
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     if (isMobile) {
-      const newTab = window.open();
-      if (newTab) {
-        newTab.document.write(`<img src="${url}" style="max-width:100%;display:block;" />`);
-        newTab.document.title = 'Long-press image → Save to Photos';
-      }
+      // Create full-screen overlay with image + instruction
+      const overlay = document.createElement('div');
+      overlay.style.cssText = 'position:fixed;inset:0;background:#0a0a0a;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;';
+
+      const img = document.createElement('img');
+      img.src = url;
+      img.style.cssText = 'max-width:100%;max-height:75vh;border-radius:12px;display:block;';
+
+      const msg = document.createElement('p');
+      msg.innerText = 'Press and hold image → Save to Photos';
+      msg.style.cssText = 'color:#d4a017;font-size:15px;font-family:sans-serif;margin-top:20px;text-align:center;';
+
+      const btn = document.createElement('button');
+      btn.innerText = '✕ Close';
+      btn.style.cssText = 'margin-top:16px;background:#333;color:#fff;border:none;padding:10px 24px;border-radius:8px;font-size:14px;cursor:pointer;';
+      btn.onclick = () => document.body.removeChild(overlay);
+
+      overlay.appendChild(img);
+      overlay.appendChild(msg);
+      overlay.appendChild(btn);
+      document.body.appendChild(overlay);
     } else {
       const a = document.createElement('a');
       a.href = url;
