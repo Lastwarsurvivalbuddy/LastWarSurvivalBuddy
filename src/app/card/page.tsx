@@ -94,31 +94,42 @@ export default function CommanderCardPage() {
     })();
   }, [router]);
 
-  const exportCard = async (format: 'png' | 'jpg') => {
-    if (!cardRef.current || exporting) return;
-    setExporting(true);
-    try {
-      const html2canvas = (await import('html2canvas')).default;
-      const canvas = await html2canvas(cardRef.current, {
-  background: '#000000',
-  useCORS: true,
-  logging: false,
-  width: cardRef.current.offsetWidth,
-  height: cardRef.current.offsetHeight,
-});
-      const mimeType = format === 'jpg' ? 'image/jpeg' : 'image/png';
-      const quality = format === 'jpg' ? 0.95 : undefined;
-      const url = canvas.toDataURL(mimeType, quality);
+const exportCard = async (format: 'png' | 'jpg') => {
+  if (!cardRef.current || exporting) return;
+  setExporting(true);
+  try {
+    const html2canvas = (await import('html2canvas')).default;
+    const canvas = await html2canvas(cardRef.current, {
+      background: '#000000',
+      useCORS: true,
+      logging: false,
+      width: cardRef.current.offsetWidth,
+      height: cardRef.current.offsetHeight,
+    });
+    const mimeType = format === 'jpg' ? 'image/jpeg' : 'image/png';
+    const quality = format === 'jpg' ? 0.95 : undefined;
+    const url = canvas.toDataURL(mimeType, quality);
+
+    // iOS Safari — open image in new tab so user can long-press → Save to Photos
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    if (isMobile) {
+      const newTab = window.open();
+      if (newTab) {
+        newTab.document.write(`<img src="${url}" style="max-width:100%;display:block;" />`);
+        newTab.document.title = 'Long-press image → Save to Photos';
+      }
+    } else {
       const a = document.createElement('a');
       a.href = url;
       a.download = `commander-${data?.commander_name ?? 'card'}.${format}`;
       a.click();
-    } catch (err) {
-      console.error('Export failed:', err);
-    } finally {
-      setExporting(false);
     }
-  };
+  } catch (err) {
+    console.error('Export failed:', err);
+  } finally {
+    setExporting(false);
+  }
+};
 
   const copyLink = async () => {
     await navigator.clipboard.writeText('https://LastWarSurvivalBuddy.com');
