@@ -93,7 +93,7 @@ export function getNextExpBreakpoint(currentHeroLevel: number): { level: number;
 }
 
 // ─── Alliance Duel Day Calculation ───────────────────────────────────────────
-// Reset is always 2am UTC (8pm CT standard / 9pm CT during DST — same UTC time)
+// Reset is always 2am UTC 
 // Subtract 2 hours so the boundary aligns with the 2am UTC reset.
 //
 // Confirmed schedule (Server 1032, DST active March 2026):

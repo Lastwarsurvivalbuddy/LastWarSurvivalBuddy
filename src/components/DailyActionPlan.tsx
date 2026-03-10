@@ -198,7 +198,7 @@ export default function DailyActionPlan({ profile }: Props) {
       {/* Footer */}
       <div className="mt-4 flex items-center justify-between">
         <p className="text-[10px] text-zinc-700 font-mono">
-          Updates at next Duel reset · 8pm CT
+          Updates at next Duel reset - 2am UCT
         </p>
         <button
           onClick={() => window.location.reload()}

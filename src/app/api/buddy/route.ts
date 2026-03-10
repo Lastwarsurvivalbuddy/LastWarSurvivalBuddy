@@ -37,7 +37,7 @@ const TIER_LIMITS: Record<string, { questions: number; screenshots: number }> = 
 };
 
 // ─── Duel day calculation ───
-// Reset is always 2am UTC (= 8pm CT standard / 9pm CT DST)
+// Reset is always 2am UTC
 // No DST logic needed — work entirely in UTC
 // Mon=Day1 Radar Training, Tue=Day2 Base Expansion, Wed=Day3 Age of Science,
 // Thu=Day4 Train Heroes, Fri=Day5 Total Mobilization, Sat=Day6 Enemy Buster, Sun=Day7 Reset
