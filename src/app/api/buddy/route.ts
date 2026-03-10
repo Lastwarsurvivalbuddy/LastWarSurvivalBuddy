@@ -5,6 +5,7 @@ import { getVIPSummary } from '@/lib/vipData';
 import { getGearSummary } from '@/lib/gearData';
 import { getBuildingSummary } from '@/lib/buildingData';
 import { getResourceNotesSummary } from '@/lib/resourceNotes';
+import { getDroneSummary } from '@/lib/droneData';
 import { getT10Summary } from '@/lib/t10Data';
 import { getHQSummary } from '@/lib/hqRequirementsData';
 import { getHealingSummary } from '@/lib/healingData';
@@ -374,6 +375,9 @@ ${getBuildingSummary()}
 
 ## Resource Notes
 ${getResourceNotesSummary()}
+
+## Drone System
+${getDroneSummary()}
 
 ## T10 Research
 ${getT10Summary()}
