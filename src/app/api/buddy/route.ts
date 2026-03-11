@@ -40,6 +40,7 @@ import { getLWTVIPSummary } from '@/lib/lwtVIPData';
 import { getT11DataSummary } from '@/lib/lwtT11Data';
 import { getDecorationTierSummary } from '@/lib/lwtDecorationTierData';
 import { getHeroTierSummary } from '@/lib/lwtHeroTierData';
+import { getProfessionDataSummary } from '@/lib/lwtProfessionData';
 import {
   SQUAD_POWER_TIER_LABELS,
   RANK_BUCKET_LABELS,
@@ -357,7 +358,7 @@ Keep responses concise, specific, and tactical. No fluff.`;
   // ── Community intel ──
   const communityIntel = await getApprovedSubmissions(Number(profile.server_number));
 
-  // ── Session 6 module data ──
+  // ── Module data ──
   const squadData        = getSquadDataSummary();
   const overlordData     = getOverlordDataSummary();
   const tricksData       = getTricksDataSummary();
@@ -368,19 +369,14 @@ Keep responses concise, specific, and tactical. No fluff.`;
   const zombieSiegeData  = getZombieSiegeDataSummary();
   const capitolData      = getCapitolDataSummary();
   const warzoneDuelData  = getWarzoneDuelDataSummary();
-
-  // ── Session 7 module data ──
-  const generalsTrial  = getGeneralsTrialSummary();
-  const skyBattlefront = getSkyBattlefrontSummary();
-  const meteoriteData  = getMeteoriteSummary();
-  const lwtVIPData     = getLWTVIPSummary();
-
-  // ── Session 8 module data ──
-  const t11Data = getT11DataSummary();
-
-  // ── Session 9 module data ──
+  const generalsTrial    = getGeneralsTrialSummary();
+  const skyBattlefront   = getSkyBattlefrontSummary();
+  const meteoriteData    = getMeteoriteSummary();
+  const lwtVIPData       = getLWTVIPSummary();
+  const t11Data          = getT11DataSummary();
   const decorationTierData = getDecorationTierSummary();
-  const heroTierData       = getHeroTierSummary();
+  const heroTierData     = getHeroTierSummary();
+  const professionData   = getProfessionDataSummary();
 
   // ── Assemble prompt ──
   return `## About This App
@@ -536,6 +532,9 @@ ${getT10Summary()}
 ## T11 Troops System
 ${t11Data}
 
+## Profession System (Engineer & War Leader)
+${professionData}
+
 ## HQ Requirements
 ${getHQSummary()}
 
@@ -569,5 +568,6 @@ ${communityIntel}
 - When asked about VIP, lead with their spend style to set realistic milestone targets. F2P players: push VIP 8 for Shirley. Spenders: push VIP 11 march slot first.
 - When asked about T11, check their troop tier first. Under T10/T10 players get prereq roadmap. T11 players get Armament Core farming strategy, branch order (Helmet→Body Armor→Protective Gear→Weapon), and star priority (1-star all branches first).
 - When asked about decorations or which decorations to upgrade, lead with their tier (S/A+/A/B/C), reference the Jan 2026 meta priority (Damage Reduction first, then Skill Damage/March Size, then Crit Damage), and give the upgrade path step they should be on (L3 all S+A first, then push S-Tier to L4+).
-- When asked about which heroes to build or invest in, lead with their troop type formation pairings from the Hero Tier List, then tier, then specific hero notes. Flag Lucius as Daily Sale only if relevant.`;
+- When asked about which heroes to build or invest in, lead with their troop type formation pairings from the Hero Tier List, then tier, then specific hero notes. Flag Lucius as Daily Sale only if relevant.
+- When asked about professions, factor in their season, spend style, and playstyle. Early season = Engineer to build fast. Mid/late season = War Leader for territorial wars. Hybrid: start Engineer, switch with Battle Pass certificate. War Leader Lv.30 Team Strike is the rally inflection point.`;
 }
