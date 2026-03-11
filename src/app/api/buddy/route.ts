@@ -18,6 +18,8 @@ import { getEventDataSummary } from '@/lib/lwtEventData';
 import { getHotDealsSummary } from '@/lib/lwtHotDealsData';
 import { getSeasonDataSummary } from '@/lib/lwtSeasonData';
 import { getSeasonDataSummary45 } from '@/lib/lwtSeason45Data';
+import { getHeroDataSummary } from '@/lib/lwtHeroData';
+import { getBuildingPrioritySummary } from '@/lib/lwtBuildingData';
 import {
   SQUAD_POWER_TIER_LABELS,
   RANK_BUCKET_LABELS,
@@ -392,6 +394,12 @@ ${getHotDealsSummary()}
 
 ## Season Guide — ${seasonDisplay}
 ${seasonGuide}
+
+## Hero System
+${getHeroDataSummary()}
+
+## Building Upgrade Priority
+${getBuildingPrioritySummary()}
 
 ## Skill Medals
 ${getSkillMedalSummary()}
