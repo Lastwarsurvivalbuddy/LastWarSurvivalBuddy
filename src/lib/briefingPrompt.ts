@@ -46,6 +46,7 @@ function getSpendLabel(spendTier: string): string {
     mid: 'Mid spender ($20–$100/mo)',
     high: 'High spender ($100–$200/mo)',
     investor: 'Investor ($200+/mo)',
+    whale: 'Whale/Investor ($200+/mo)',
   }
   return map[spendTier] ?? spendTier
 }
@@ -59,7 +60,7 @@ export async function buildBriefingPrompt(profile: Record<string, unknown>): Pro
   const serverDay = Number(profile.computed_server_day ?? profile.server_day ?? 1)
   const hqLevel = Number(profile.hq_level ?? 1)
   const season = Number(profile.season ?? 0)
-  const spendTier = String(profile.spend_tier ?? 'f2p')
+  const spendTier = String(profile.spend_style ?? profile.spend_tier ?? 'f2p')
   const troopType = String(profile.troop_type ?? 'unknown')
   const troopTier = String(profile.troop_tier ?? 'under_t10')
   const playstyle = String(profile.playstyle ?? 'balanced')
