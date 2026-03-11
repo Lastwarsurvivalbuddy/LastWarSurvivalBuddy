@@ -37,6 +37,7 @@ import { getGeneralsTrialSummary } from '@/lib/lwtGeneralsTrialData';
 import { getSkyBattlefrontSummary } from '@/lib/lwtSkyBattlefrontData';
 import { getMeteoriteSummary } from '@/lib/lwtMeteoriteData';
 import { getLWTVIPSummary } from '@/lib/lwtVIPData';
+import { getT11DataSummary } from '@/lib/lwtT11Data';
 import {
   SQUAD_POWER_TIER_LABELS,
   RANK_BUCKET_LABELS,
@@ -329,7 +330,7 @@ Keep responses concise, specific, and tactical. No fluff.`;
   const troopTierDisplay: Record<string, string> = {
     under_t10: 'Under T10 — working toward T10 unlock',
     t10:       'T10 — unlocked and training. Do NOT recommend T10 research nodes as a goal — assume T10 research is complete.',
-    t11:       'T11 — Armament Research system active. T10 research tree is fully complete. Do NOT recommend T10 research nodes.',
+    t11:       'T11 — Armament Institute active. Armored Trooper / Assault Raider system. Do NOT recommend T10 research nodes.',
   };
 
   const duelLabels: Record<number, string> = {
@@ -367,10 +368,13 @@ Keep responses concise, specific, and tactical. No fluff.`;
   const warzoneDuelData  = getWarzoneDuelDataSummary();
 
   // ── Session 7 module data ──
-  const generalsTrial   = getGeneralsTrialSummary();
-  const skyBattlefront  = getSkyBattlefrontSummary();
-  const meteoriteData   = getMeteoriteSummary();
-  const lwtVIPData      = getLWTVIPSummary();
+  const generalsTrial  = getGeneralsTrialSummary();
+  const skyBattlefront = getSkyBattlefrontSummary();
+  const meteoriteData  = getMeteoriteSummary();
+  const lwtVIPData     = getLWTVIPSummary();
+
+  // ── Session 8 module data ──
+  const t11Data = getT11DataSummary();
 
   // ── Assemble prompt ──
   return `## About This App
@@ -517,6 +521,9 @@ ${getArmamentSummary()}
 ## T10 Research
 ${getT10Summary()}
 
+## T11 Troops System
+${t11Data}
+
 ## HQ Requirements
 ${getHQSummary()}
 
@@ -547,5 +554,6 @@ ${communityIntel}
 - When asked about General's Trial, reference their troop tier and hero build to calibrate mode recommendations (Normal vs Advanced).
 - When asked about Sky Battlefront, check if they are in an alliance and emphasize donation phase — a weak Airship tanks battle performance.
 - When asked about Meteorite Iron War, lead with troop tier and march capacity — these determine whether they can compete for large nodes.
-- When asked about VIP, lead with their spend style to set realistic milestone targets. F2P players: push VIP 8 for Shirley. Spenders: push VIP 11 march slot first.`;
+- When asked about VIP, lead with their spend style to set realistic milestone targets. F2P players: push VIP 8 for Shirley. Spenders: push VIP 11 march slot first.
+- When asked about T11, check their troop tier first. Under T10/T10 players get prereq roadmap. T11 players get Armament Core farming strategy, branch order (Helmet→Body Armor→Protective Gear→Weapon), and star priority (1-star all branches first).`;
 }
