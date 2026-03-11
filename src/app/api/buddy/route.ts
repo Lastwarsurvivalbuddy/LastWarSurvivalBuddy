@@ -33,6 +33,10 @@ import { getDesertStormDataSummary } from '@/lib/lwtDesertStormData';
 import { getZombieSiegeDataSummary } from '@/lib/lwtZombieSiegeData';
 import { getCapitolDataSummary } from '@/lib/lwtCapitolData';
 import { getWarzoneDuelDataSummary } from '@/lib/lwtWarzoneDuelData';
+import { getGeneralsTrialSummary } from '@/lib/lwtGeneralsTrialData';
+import { getSkyBattlefrontSummary } from '@/lib/lwtSkyBattlefrontData';
+import { getMeteoriteSummary } from '@/lib/lwtMeteoriteData';
+import { getLWTVIPSummary } from '@/lib/lwtVIPData';
 import {
   SQUAD_POWER_TIER_LABELS,
   RANK_BUCKET_LABELS,
@@ -350,17 +354,23 @@ Keep responses concise, specific, and tactical. No fluff.`;
   // ── Community intel ──
   const communityIntel = await getApprovedSubmissions(Number(profile.server_number));
 
-  // ── New module data ──
-  const squadData         = getSquadDataSummary();
-  const overlordData      = getOverlordDataSummary();
-  const tricksData        = getTricksDataSummary();
-  const radarMissionData  = getRadarMissionDataSummary();
-  const storesData        = getStoresDataSummary();
-  const allianceData      = getAllianceDataSummary();
-  const desertStormData   = getDesertStormDataSummary();
-  const zombieSiegeData   = getZombieSiegeDataSummary();
-  const capitolData       = getCapitolDataSummary();
-  const warzoneDuelData   = getWarzoneDuelDataSummary();
+  // ── Session 6 module data ──
+  const squadData        = getSquadDataSummary();
+  const overlordData     = getOverlordDataSummary();
+  const tricksData       = getTricksDataSummary();
+  const radarMissionData = getRadarMissionDataSummary();
+  const storesData       = getStoresDataSummary();
+  const allianceData     = getAllianceDataSummary();
+  const desertStormData  = getDesertStormDataSummary();
+  const zombieSiegeData  = getZombieSiegeDataSummary();
+  const capitolData      = getCapitolDataSummary();
+  const warzoneDuelData  = getWarzoneDuelDataSummary();
+
+  // ── Session 7 module data ──
+  const generalsTrial   = getGeneralsTrialSummary();
+  const skyBattlefront  = getSkyBattlefrontSummary();
+  const meteoriteData   = getMeteoriteSummary();
+  const lwtVIPData      = getLWTVIPSummary();
 
   // ── Assemble prompt ──
   return `## About This App
@@ -462,6 +472,15 @@ ${capitolData}
 ## Warzone Duel (Server War)
 ${warzoneDuelData}
 
+## General's Trial
+${generalsTrial}
+
+## Sky Battlefront
+${skyBattlefront}
+
+## Meteorite Iron War
+${meteoriteData}
+
 ## Meta Tips & Tricks
 ${tricksData}
 
@@ -470,6 +489,9 @@ ${getSkillMedalSummary()}
 
 ## VIP System
 ${getVIPSummary()}
+
+## VIP Strategy Guide (Extended)
+${lwtVIPData}
 
 ## Gear System (Costs)
 ${getGearSummary()}
@@ -521,5 +543,9 @@ ${communityIntel}
 - When asked about Desert Storm, reference their squad power and rank to calibrate their role (frontline vs support vs garrison).
 - When asked about stores, always lead with the highest-value purchase for their current situation.
 - When asked about Capitol hats/ministries, explain the speed math — buffs increase speed, not reduce time by the same %.
-- When asked about Warzone Duel, remind them that truck plundering is the highest-volume point contribution every player can do daily.`;
+- When asked about Warzone Duel, remind them that truck plundering is the highest-volume point contribution every player can do daily.
+- When asked about General's Trial, reference their troop tier and hero build to calibrate mode recommendations (Normal vs Advanced).
+- When asked about Sky Battlefront, check if they are in an alliance and emphasize donation phase — a weak Airship tanks battle performance.
+- When asked about Meteorite Iron War, lead with troop tier and march capacity — these determine whether they can compete for large nodes.
+- When asked about VIP, lead with their spend style to set realistic milestone targets. F2P players: push VIP 8 for Shirley. Spenders: push VIP 11 march slot first.`;
 }
