@@ -38,6 +38,7 @@ import { getSkyBattlefrontSummary } from '@/lib/lwtSkyBattlefrontData';
 import { getMeteoriteSummary } from '@/lib/lwtMeteoriteData';
 import { getLWTVIPSummary } from '@/lib/lwtVIPData';
 import { getT11DataSummary } from '@/lib/lwtT11Data';
+import { getDecorationTierSummary } from '@/lib/lwtDecorationTierData';
 import {
   SQUAD_POWER_TIER_LABELS,
   RANK_BUCKET_LABELS,
@@ -376,6 +377,9 @@ Keep responses concise, specific, and tactical. No fluff.`;
   // ── Session 8 module data ──
   const t11Data = getT11DataSummary();
 
+  // ── Session 9 module data ──
+  const decorationTierData = getDecorationTierSummary();
+
   // ── Assemble prompt ──
   return `## About This App
 Last War: Survival Buddy (LastWarSurvivalBuddy.com) is a personalized AI coaching app for Last War: Survival players. It is a fan-built community tool — not affiliated with or endorsed by FUNFLY PTE. LTD.
@@ -515,6 +519,9 @@ ${getDroneSummary()}
 ## Decorations
 ${getDecorationSummary()}
 
+## Decoration Tier List & Upgrade Priority
+${decorationTierData}
+
 ## M5-A Armament System
 ${getArmamentSummary()}
 
@@ -555,5 +562,6 @@ ${communityIntel}
 - When asked about Sky Battlefront, check if they are in an alliance and emphasize donation phase — a weak Airship tanks battle performance.
 - When asked about Meteorite Iron War, lead with troop tier and march capacity — these determine whether they can compete for large nodes.
 - When asked about VIP, lead with their spend style to set realistic milestone targets. F2P players: push VIP 8 for Shirley. Spenders: push VIP 11 march slot first.
-- When asked about T11, check their troop tier first. Under T10/T10 players get prereq roadmap. T11 players get Armament Core farming strategy, branch order (Helmet→Body Armor→Protective Gear→Weapon), and star priority (1-star all branches first).`;
+- When asked about T11, check their troop tier first. Under T10/T10 players get prereq roadmap. T11 players get Armament Core farming strategy, branch order (Helmet→Body Armor→Protective Gear→Weapon), and star priority (1-star all branches first).
+- When asked about decorations or which decorations to upgrade, lead with their tier (S/A+/A/B/C), reference the Jan 2026 meta priority (Damage Reduction first, then Skill Damage/March Size, then Crit Damage), and give the upgrade path step they should be on (L3 all S+A first, then push S-Tier to L4+).`;
 }
