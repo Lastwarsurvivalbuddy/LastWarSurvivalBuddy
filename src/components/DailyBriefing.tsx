@@ -24,7 +24,7 @@ function parseBriefing(text: string): BriefingSection | null {
     const movesRaw = movesMatch?.[1]?.trim() ?? '';
     const moves = movesRaw
       .split('\n')
-      .map(l => l.replace(/^[•\-\*]\s*/, '').trim())
+      .map(l => l.replace(/^[\d]+[\.\)]\s*/, '').replace(/^[•\-\*]\s*/, '').trim())
       .filter(l => l.length > 0)
       .slice(0, 3);
     const watchOut = watchMatch?.[1]?.replace(/^⚠\s*/, '').trim() ?? '';
