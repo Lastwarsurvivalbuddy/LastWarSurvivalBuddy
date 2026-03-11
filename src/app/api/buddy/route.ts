@@ -23,6 +23,16 @@ import { getBuildingPrioritySummary } from '@/lib/lwtBuildingData';
 import { getTroopDataSummary } from '@/lib/lwtTroopData';
 import { getGearDataSummary } from '@/lib/lwtGearData';
 import { getAllianceDuelDetailSummary } from '@/lib/lwtAllianceDuelData';
+import { getSquadDataSummary } from '@/lib/lwtSquadData';
+import { getOverlordDataSummary } from '@/lib/lwtOverlordData';
+import { getTricksDataSummary } from '@/lib/lwtTricksData';
+import { getRadarMissionDataSummary } from '@/lib/lwtRadarMissionData';
+import { getStoresDataSummary } from '@/lib/lwtStoresData';
+import { getAllianceDataSummary } from '@/lib/lwtAllianceData';
+import { getDesertStormDataSummary } from '@/lib/lwtDesertStormData';
+import { getZombieSiegeDataSummary } from '@/lib/lwtZombieSiegeData';
+import { getCapitolDataSummary } from '@/lib/lwtCapitolData';
+import { getWarzoneDuelDataSummary } from '@/lib/lwtWarzoneDuelData';
 import {
   SQUAD_POWER_TIER_LABELS,
   RANK_BUCKET_LABELS,
@@ -340,6 +350,18 @@ Keep responses concise, specific, and tactical. No fluff.`;
   // ── Community intel ──
   const communityIntel = await getApprovedSubmissions(Number(profile.server_number));
 
+  // ── New module data ──
+  const squadData         = getSquadDataSummary();
+  const overlordData      = getOverlordDataSummary();
+  const tricksData        = getTricksDataSummary();
+  const radarMissionData  = getRadarMissionDataSummary();
+  const storesData        = getStoresDataSummary();
+  const allianceData      = getAllianceDataSummary();
+  const desertStormData   = getDesertStormDataSummary();
+  const zombieSiegeData   = getZombieSiegeDataSummary();
+  const capitolData       = getCapitolDataSummary();
+  const warzoneDuelData   = getWarzoneDuelDataSummary();
+
   // ── Assemble prompt ──
   return `## About This App
 Last War: Survival Buddy (LastWarSurvivalBuddy.com) is a personalized AI coaching app for Last War: Survival players. It is a fan-built community tool — not affiliated with or endorsed by FUNFLY PTE. LTD.
@@ -413,6 +435,36 @@ ${getTroopDataSummary()}
 ## Gear Strategy Guide
 ${getGearDataSummary()}
 
+## Squad Formation & Troop Type Counter Bonus
+${squadData}
+
+## Overlord Gorilla System
+${overlordData}
+
+## Radar Missions
+${radarMissionData}
+
+## Stores Guide
+${storesData}
+
+## Alliance System
+${allianceData}
+
+## Desert Storm Battlefield
+${desertStormData}
+
+## Zombie Siege
+${zombieSiegeData}
+
+## The Capitol & Ministries
+${capitolData}
+
+## Warzone Duel (Server War)
+${warzoneDuelData}
+
+## Meta Tips & Tricks
+${tricksData}
+
 ## Skill Medals
 ${getSkillMedalSummary()}
 
@@ -464,5 +516,10 @@ ${communityIntel}
 - If the player is T11, don't waste their time with basic building advice. Calibrate depth to their level.
 - When asked about troop type matchups, use the counter triangle and recommend specific troop/hero pairings.
 - When asked about gear, reference the player's playstyle and troop type to give specific slot priorities.
-- When asked about Alliance Duel, reference today's duel day and what to save vs. spend right now.`;
+- When asked about Alliance Duel, reference today's duel day and what to save vs. spend right now.
+- When asked about Overlord Gorilla, reference whether they are likely past Day 89 of Season 2 and tailor advice to their progress stage.
+- When asked about Desert Storm, reference their squad power and rank to calibrate their role (frontline vs support vs garrison).
+- When asked about stores, always lead with the highest-value purchase for their current situation.
+- When asked about Capitol hats/ministries, explain the speed math — buffs increase speed, not reduce time by the same %.
+- When asked about Warzone Duel, remind them that truck plundering is the highest-volume point contribution every player can do daily.`;
 }
