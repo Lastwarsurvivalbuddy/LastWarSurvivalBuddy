@@ -1,7 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+// src/components/DailyActionPlan.tsx
+// Fixed session 18: Today's Orders checkbox state persisted to Supabase (action_completions table)
+
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import { supabase } from '@/lib/supabase'
 import { generateDailyPlan, DailyAction, ActionPriority, CommanderProfile } from '@/lib/actionPlan'
 
 interface Props {
@@ -15,9 +19,27 @@ const priorityConfig: Record<ActionPriority, { label: string; color: string; bar
   low:      { label: 'LOW',      color: 'text-zinc-400', bar: 'bg-zinc-500' },
 }
 
-function ActionCard({ action, index }: { action: DailyAction; index: number }) {
+// UTC date string — resets completions daily at midnight UTC
+function getUTCDateString(): string {
+  const now = new Date()
+  const year = now.getUTCFullYear()
+  const month = String(now.getUTCMonth() + 1).padStart(2, '0')
+  const day = String(now.getUTCDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+function ActionCard({
+  action,
+  index,
+  checked,
+  onToggle,
+}: {
+  action: DailyAction
+  index: number
+  checked: boolean
+  onToggle: (id: string) => void
+}) {
   const [expanded, setExpanded] = useState(false)
-  const [checked, setChecked] = useState(false)
   const router = useRouter()
   const cfg = priorityConfig[action.priority]
 
@@ -40,7 +62,7 @@ function ActionCard({ action, index }: { action: DailyAction; index: number }) {
         <div className="flex items-start gap-3">
           {/* Checkbox */}
           <button
-            onClick={() => setChecked(!checked)}
+            onClick={() => onToggle(action.id)}
             className={`
               mt-0.5 flex-shrink-0 w-5 h-5 rounded border transition-all duration-150
               ${checked
@@ -132,6 +154,71 @@ export default function DailyActionPlan({ profile }: Props) {
   const plan = generateDailyPlan(profile)
   const criticalCount = plan.actions.filter(a => a.priority === 'critical').length
 
+  // ── Completion state ────────────────────────────────────────────────────
+  const [completedIds, setCompletedIds] = useState<Set<string>>(new Set())
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const userIdRef = useRef<string | null>(null)
+
+  // Load today's completions from Supabase on mount
+  useEffect(() => {
+    async function loadCompletions() {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) return
+      userIdRef.current = session.user.id
+      const today = getUTCDateString()
+      const { data } = await supabase
+        .from('action_completions')
+        .select('completed_ids')
+        .eq('user_id', session.user.id)
+        .eq('action_date', today)
+        .maybeSingle()
+      if (data?.completed_ids?.length) {
+        setCompletedIds(new Set(data.completed_ids))
+      }
+    }
+    loadCompletions()
+
+    return () => {
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
+    }
+  }, [])
+
+  // Debounced persist to Supabase
+  const persistCompletions = useCallback((updated: Set<string>) => {
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
+    saveTimerRef.current = setTimeout(async () => {
+      const userId = userIdRef.current
+      if (!userId) return
+      const today = getUTCDateString()
+      await supabase
+        .from('action_completions')
+        .upsert(
+          {
+            user_id: userId,
+            action_date: today,
+            completed_ids: Array.from(updated),
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: 'user_id,action_date' }
+        )
+    }, 600)
+  }, [])
+
+  const toggleAction = useCallback((id: string) => {
+    setCompletedIds(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) {
+        next.delete(id)
+      } else {
+        next.add(id)
+      }
+      persistCompletions(next)
+      return next
+    })
+  }, [persistCompletions])
+
+  const allDone = plan.actions.length > 0 && completedIds.size === plan.actions.length
+
   return (
     <div className="w-full">
       {/* Header */}
@@ -183,7 +270,7 @@ export default function DailyActionPlan({ profile }: Props) {
       <div className="flex items-center gap-3 mb-4">
         <div className="flex-1 h-px bg-zinc-800" />
         <span className="text-[10px] font-mono text-zinc-600 uppercase tracking-widest">
-          Today's Orders
+          Today's Orders {allDone && <span className="text-green-500 ml-1">· ✓ All done</span>}
         </span>
         <div className="flex-1 h-px bg-zinc-800" />
       </div>
@@ -191,7 +278,13 @@ export default function DailyActionPlan({ profile }: Props) {
       {/* Action cards */}
       <div className="space-y-2">
         {plan.actions.map((action, i) => (
-          <ActionCard key={action.id} action={action} index={i} />
+          <ActionCard
+            key={action.id}
+            action={action}
+            index={i}
+            checked={completedIds.has(action.id)}
+            onToggle={toggleAction}
+          />
         ))}
       </div>
 
