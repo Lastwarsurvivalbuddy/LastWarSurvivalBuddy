@@ -1,7 +1,7 @@
 'use client';
 // src/components/DailyBriefing.tsx
 // Daily Briefing Card — pre-generated morning summary
-// Built: March 11, 2026 (session 11)
+// Built: March 11, 2026 (session 11) — fixed session 14: UTC date validation on client
 
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
@@ -10,6 +10,15 @@ interface BriefingSection {
   situation: string;
   moves: string[];
   watchOut: string;
+}
+
+// Always derive date from UTC — must match server logic exactly
+function getUTCDateString(): string {
+  const now = new Date();
+  const year = now.getUTCFullYear();
+  const month = String(now.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(now.getUTCDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
 function parseBriefing(text: string): BriefingSection | null {
@@ -60,6 +69,17 @@ export default function DailyBriefing() {
       }
 
       const data = await res.json();
+
+      // ── Client-side date guard ─────────────────────────────────────────────
+      // If the briefing date from the server doesn't match today's UTC date,
+      // it's stale — trigger a force refresh instead of rendering it.
+      const todayUTC = getUTCDateString();
+      if (data.briefingDate && data.briefingDate !== todayUTC) {
+        console.warn(`Briefing date mismatch: got ${data.briefingDate}, expected ${todayUTC}. Force refreshing.`);
+        await forceRefresh(session.access_token);
+        return;
+      }
+
       setBriefing(data.briefing);
       setParsed(parseBriefing(data.briefing));
       setGeneratedAt(data.generatedAt);
@@ -71,15 +91,38 @@ export default function DailyBriefing() {
     }
   }, []);
 
+  // Internal force-refresh — deletes stale cache then re-fetches
+  const forceRefresh = async (accessToken: string) => {
+    try {
+      await fetch('/api/briefing', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      // Re-fetch after clearing — but use raw fetch to avoid recursive loop
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+      const res = await fetch('/api/briefing', {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      if (!res.ok) throw new Error('Failed after force refresh');
+      const data = await res.json();
+      setBriefing(data.briefing);
+      setParsed(parseBriefing(data.briefing));
+      setGeneratedAt(data.generatedAt);
+      setIsCached(data.cached);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Refresh failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleRefresh = async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
-      await fetch('/api/briefing', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      });
-      await fetchBriefing();
+      setLoading(true);
+      await forceRefresh(session.access_token);
     } catch {
       // silent
     }

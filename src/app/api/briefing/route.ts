@@ -1,6 +1,6 @@
 // src/app/api/briefing/route.ts
 // Daily Briefing Card — generates once per day per user, cached in Supabase
-// Built: March 11, 2026 (session 11) — fixed session 11b: createClient pattern
+// Built: March 11, 2026 (session 11) — fixed session 14: UTC date consistency
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
@@ -13,6 +13,15 @@ function getSupabase() {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
+}
+
+// Always derive date from UTC — never local time
+function getUTCDateString(): string {
+  const now = new Date();
+  const year = now.getUTCFullYear();
+  const month = String(now.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(now.getUTCDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
 export async function GET(req: NextRequest) {
@@ -30,21 +39,22 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+    const today = getUTCDateString();
 
     // ── Check cache ───────────────────────────────────────────────────────────
     const { data: cached } = await supabase
       .from('daily_briefings')
-      .select('briefing_text, generated_at')
+      .select('briefing_text, briefing_date, generated_at')
       .eq('user_id', user.id)
       .eq('briefing_date', today)
       .single();
 
-    if (cached?.briefing_text) {
+    if (cached?.briefing_text && cached.briefing_date === today) {
       return NextResponse.json({
         briefing: cached.briefing_text,
         cached: true,
         generatedAt: cached.generated_at,
+        briefingDate: cached.briefing_date,
       });
     }
 
@@ -106,6 +116,7 @@ export async function GET(req: NextRequest) {
       briefing: briefingText,
       cached: false,
       generatedAt: now,
+      briefingDate: today,
     });
 
   } catch (err) {
@@ -125,7 +136,7 @@ export async function POST(req: NextRequest) {
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
     if (authError || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const today = new Date().toISOString().split('T')[0];
+    const today = getUTCDateString();
 
     await supabase
       .from('daily_briefings')
