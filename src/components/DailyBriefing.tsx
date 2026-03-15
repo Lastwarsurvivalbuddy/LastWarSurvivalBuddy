@@ -2,8 +2,9 @@
 // src/components/DailyBriefing.tsx
 // Daily Briefing Card — pre-generated morning summary
 // Built: March 11, 2026 (session 11) — fixed session 14: UTC date validation on client
+// Fixed session 18: Top 3 Moves checkbox state persisted to Supabase (briefing_completions table)
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 
 interface BriefingSection {
@@ -52,6 +53,63 @@ export default function DailyBriefing() {
   const [generatedAt, setGeneratedAt] = useState<string | null>(null);
   const [isCached, setIsCached] = useState(false);
 
+  // ── Completion state ─────────────────────────────────────────────────────
+  const [completedMoves, setCompletedMoves] = useState<Set<number>>(new Set());
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const userIdRef = useRef<string | null>(null);
+
+  // Load completions for today from Supabase
+  const loadCompletions = useCallback(async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+    userIdRef.current = session.user.id;
+    const today = getUTCDateString();
+    const { data } = await supabase
+      .from('briefing_completions')
+      .select('completed_indices')
+      .eq('user_id', session.user.id)
+      .eq('briefing_date', today)
+      .maybeSingle();
+    if (data?.completed_indices?.length) {
+      setCompletedMoves(new Set(data.completed_indices));
+    }
+  }, []);
+
+  // Persist completions to Supabase (debounced 600ms)
+  const persistCompletions = useCallback((updated: Set<number>) => {
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(async () => {
+      const userId = userIdRef.current;
+      if (!userId) return;
+      const today = getUTCDateString();
+      await supabase
+        .from('briefing_completions')
+        .upsert(
+          {
+            user_id: userId,
+            briefing_date: today,
+            completed_indices: Array.from(updated),
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: 'user_id,briefing_date' }
+        );
+    }, 600);
+  }, []);
+
+  const toggleMove = useCallback((index: number) => {
+    setCompletedMoves(prev => {
+      const next = new Set(prev);
+      if (next.has(index)) {
+        next.delete(index);
+      } else {
+        next.add(index);
+      }
+      persistCompletions(next);
+      return next;
+    });
+  }, [persistCompletions]);
+
+  // ── Briefing fetch ───────────────────────────────────────────────────────
   const fetchBriefing = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -70,9 +128,7 @@ export default function DailyBriefing() {
 
       const data = await res.json();
 
-      // ── Client-side date guard ─────────────────────────────────────────────
-      // If the briefing date from the server doesn't match today's UTC date,
-      // it's stale — trigger a force refresh instead of rendering it.
+      // ── Client-side date guard ───────────────────────────────────────────
       const todayUTC = getUTCDateString();
       if (data.briefingDate && data.briefingDate !== todayUTC) {
         console.warn(`Briefing date mismatch: got ${data.briefingDate}, expected ${todayUTC}. Force refreshing.`);
@@ -98,7 +154,6 @@ export default function DailyBriefing() {
         method: 'POST',
         headers: { Authorization: `Bearer ${accessToken}` },
       });
-      // Re-fetch after clearing — but use raw fetch to avoid recursive loop
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
       const res = await fetch('/api/briefing', {
@@ -122,13 +177,25 @@ export default function DailyBriefing() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
       setLoading(true);
+      // Reset completions for new briefing
+      setCompletedMoves(new Set());
       await forceRefresh(session.access_token);
     } catch {
       // silent
     }
   };
 
-  useEffect(() => { fetchBriefing(); }, [fetchBriefing]);
+  useEffect(() => {
+    fetchBriefing();
+    loadCompletions();
+  }, [fetchBriefing, loadCompletions]);
+
+  // Cleanup debounce timer on unmount
+  useEffect(() => {
+    return () => {
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    };
+  }, []);
 
   const formattedTime = generatedAt
     ? new Date(generatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
@@ -182,6 +249,8 @@ export default function DailyBriefing() {
 
   if (!parsed) return null;
 
+  const allDone = parsed.moves.length > 0 && completedMoves.size === parsed.moves.length;
+
   // ── Main card ────────────────────────────────────────────────────────────
   return (
     <div className="rounded-xl border border-yellow-500/30 bg-zinc-900/90 overflow-hidden shadow-lg">
@@ -191,6 +260,9 @@ export default function DailyBriefing() {
           <span className="text-yellow-400 text-xs font-bold tracking-widest uppercase">⚡ Daily Briefing</span>
           {isCached && formattedTime && (
             <span className="text-zinc-500 text-xs">· generated {formattedTime}</span>
+          )}
+          {allDone && (
+            <span className="text-green-400 text-xs font-semibold">· ✓ All done</span>
           )}
         </div>
         <button
@@ -211,19 +283,39 @@ export default function DailyBriefing() {
           </div>
         )}
 
-        {/* Top 3 Moves */}
+        {/* Top 3 Moves — with persistent checkboxes */}
         {parsed.moves.length > 0 && (
           <div>
             <p className="text-zinc-500 text-xs font-semibold uppercase tracking-wider mb-2">Top 3 Moves</p>
             <ol className="space-y-2">
-              {parsed.moves.map((move, i) => (
-                <li key={i} className="flex items-start gap-3">
-                  <span className="flex-shrink-0 w-5 h-5 rounded-full bg-yellow-500/20 text-yellow-400 text-xs font-bold flex items-center justify-center mt-0.5">
-                    {i + 1}
-                  </span>
-                  <span className="text-zinc-200 text-sm leading-relaxed">{move}</span>
-                </li>
-              ))}
+              {parsed.moves.map((move, i) => {
+                const done = completedMoves.has(i);
+                return (
+                  <li
+                    key={i}
+                    className="flex items-start gap-3 cursor-pointer group"
+                    onClick={() => toggleMove(i)}
+                  >
+                    {/* Checkbox */}
+                    <span
+                      className={`flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center mt-0.5 transition-colors ${
+                        done
+                          ? 'bg-green-500/30 border-green-500 text-green-400'
+                          : 'border-yellow-500/40 text-transparent group-hover:border-yellow-400'
+                      }`}
+                    >
+                      {done && (
+                        <svg className="w-3 h-3" fill="none" viewBox="0 0 12 12" stroke="currentColor" strokeWidth={2.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M2 6l3 3 5-5" />
+                        </svg>
+                      )}
+                    </span>
+                    <span className={`text-sm leading-relaxed transition-colors ${done ? 'text-zinc-500 line-through' : 'text-zinc-200'}`}>
+                      {move}
+                    </span>
+                  </li>
+                );
+              })}
             </ol>
           </div>
         )}
