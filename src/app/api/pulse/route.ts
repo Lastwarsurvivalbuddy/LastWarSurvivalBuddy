@@ -1,13 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+}
 
 export async function GET(req: NextRequest) {
   try {
+    const supabase = getSupabase()
     const { searchParams } = new URL(req.url)
     const scope = searchParams.get('scope') // 'server' | 'global'
     const serverNumber = searchParams.get('server_number')
@@ -25,20 +28,15 @@ export async function GET(req: NextRequest) {
     }
 
     const { data: streakData, error: streakError } = await streakQuery
-
     if (streakError) throw streakError
 
     // --- Most Active (approved submissions) ---
-    let submissionQuery = supabase
+    // NOTE: community_submissions does NOT have server_number.
+    // For server scope, filter by joining against profiles after the fact.
+    const { data: submissionData, error: submissionError } = await supabase
       .from('community_submissions')
-      .select('user_id, server_number')
+      .select('user_id')
       .eq('status', 'approved')
-
-    if (scope === 'server' && serverNumber) {
-      submissionQuery = submissionQuery.eq('server_number', parseInt(serverNumber))
-    }
-
-    const { data: submissionData, error: submissionError } = await submissionQuery
 
     if (submissionError) throw submissionError
 
@@ -48,31 +46,32 @@ export async function GET(req: NextRequest) {
       countMap[row.user_id] = (countMap[row.user_id] ?? 0) + 1
     }
 
-    // Get top 5 user_ids by count
-    const topUserIds = Object.entries(countMap)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 5)
-      .map(([userId]) => userId)
+    const allUserIds = Object.keys(countMap)
 
-    // Fetch commander names for those user_ids
     let topContributors: { commander_name: string; count: number; server_number: number }[] = []
 
-    if (topUserIds.length > 0) {
-      const { data: profileData, error: profileError } = await supabase
+    if (allUserIds.length > 0) {
+      let profileQuery = supabase
         .from('profiles')
         .select('id, commander_name, server_number')
-        .in('id', topUserIds)
+        .in('id', allUserIds)
 
+      // Filter by server at the profile level — this is where server_number lives
+      if (scope === 'server' && serverNumber) {
+        profileQuery = profileQuery.eq('server_number', parseInt(serverNumber))
+      }
+
+      const { data: profileData, error: profileError } = await profileQuery
       if (profileError) throw profileError
 
-      topContributors = topUserIds.map((userId) => {
-        const profile = profileData?.find((p) => p.id === userId)
-        return {
-          commander_name: profile?.commander_name ?? 'Unknown',
-          server_number: profile?.server_number ?? 0,
-          count: countMap[userId],
-        }
-      })
+      topContributors = (profileData ?? [])
+        .map((profile) => ({
+          commander_name: profile.commander_name ?? 'Unknown',
+          server_number: profile.server_number ?? 0,
+          count: countMap[profile.id] ?? 0,
+        }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 5)
     }
 
     return NextResponse.json({
