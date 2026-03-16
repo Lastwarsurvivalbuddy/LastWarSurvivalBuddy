@@ -293,6 +293,58 @@
       box-shadow: 0 4px 20px rgba(232,160,32,0.3); transition: all 0.2s; }
     .bottom-signup-btn:hover { box-shadow: 0 8px 32px rgba(232,160,32,0.5); transform: translateY(-1px); }
 
+    /* ── CONTACT ── */
+    .contact-section { position: relative; z-index: 1; padding: 100px 5%;
+      border-top: 1px solid var(--border);
+      background: linear-gradient(180deg, transparent, rgba(192,40,26,0.03), transparent); }
+    .contact-inner { max-width: 900px; margin: 0 auto;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: start; }
+    .contact-label { font-family: 'Rajdhani', sans-serif; font-size: 11px; font-weight: 700;
+      letter-spacing: 0.3em; text-transform: uppercase; color: var(--gold); margin-bottom: 14px; }
+    .contact-title { font-family: 'Oswald', sans-serif; font-size: clamp(26px, 3.5vw, 38px);
+      font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
+      color: var(--text); margin-bottom: 16px; line-height: 1.1; }
+    .contact-title span { color: var(--red); }
+    .contact-desc { font-size: 14px; color: var(--muted2); line-height: 1.85; font-weight: 300; margin-bottom: 28px; }
+    .contact-reasons { display: flex; flex-direction: column; gap: 8px; }
+    .contact-reason { display: flex; align-items: center; gap: 10px;
+      font-size: 13px; color: var(--muted2); }
+    .contact-reason::before { content: ''; width: 5px; height: 5px; border-radius: 50%;
+      background: var(--gold); flex-shrink: 0; }
+    .contact-form { display: flex; flex-direction: column; gap: 14px; }
+    .contact-form-group { display: flex; flex-direction: column; gap: 6px; }
+    .contact-form-label { font-family: 'Rajdhani', sans-serif; font-size: 10px; font-weight: 700;
+      letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); }
+    .contact-form-input,
+    .contact-form-select,
+    .contact-form-textarea {
+      background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+      padding: 12px 16px; color: var(--text); font-size: 13px;
+      font-family: 'Open Sans', sans-serif; font-weight: 300;
+      outline: none; width: 100%; transition: border-color 0.2s; }
+    .contact-form-input:focus,
+    .contact-form-select:focus,
+    .contact-form-textarea:focus { border-color: var(--gold); }
+    .contact-form-input::placeholder,
+    .contact-form-textarea::placeholder { color: var(--muted); }
+    .contact-form-select { appearance: none; cursor: pointer;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23606878' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; }
+    .contact-form-select option { background: #0e1014; }
+    .contact-form-textarea { resize: vertical; min-height: 110px; line-height: 1.6; }
+    .contact-submit { background: linear-gradient(135deg, var(--red), var(--gold2));
+      border: none; border-radius: 8px; padding: 13px 28px; color: #fff;
+      font-family: 'Oswald', sans-serif; font-size: 14px; font-weight: 600;
+      letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer;
+      box-shadow: 0 4px 20px rgba(192,40,26,0.3); transition: all 0.2s; align-self: flex-start; }
+    .contact-submit:hover { box-shadow: 0 8px 28px rgba(192,40,26,0.5); transform: translateY(-1px); }
+    .contact-submit:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .contact-success { display: none; background: rgba(48,184,112,0.08);
+      border: 1px solid rgba(48,184,112,0.25); border-radius: 8px; padding: 16px 20px; }
+    .contact-success.visible { display: block; }
+    .contact-success p { font-size: 13px; color: var(--green); line-height: 1.6; }
+    .contact-success strong { font-weight: 600; }
+
     /* ── FOOTER ── */
     footer { position: relative; z-index: 1; border-top: 1px solid var(--border);
       padding: 24px 5%; display: flex; align-items: center; justify-content: space-between;
@@ -317,6 +369,7 @@
       .bottom-signup { flex-direction: column; }
       .bottom-signup input { width: 100%; }
       .bottom-signup-btn { width: 100%; }
+      .contact-inner { grid-template-columns: 1fr; gap: 40px; }
       footer { justify-content: center; text-align: center; }
       .pricing-grid { grid-template-columns: 1fr 1fr; }
     }
@@ -713,8 +766,8 @@
           <div style="width:120px;height:14px;background:radial-gradient(ellipse,rgba(232,160,32,0.18),transparent 70%);margin-top:-10px;border-radius:50%;"></div>
           <div style="margin-top:16px;background:rgba(232,160,32,0.08);border:1px solid rgba(232,160,32,0.25);border-radius:8px;padding:7px 16px;text-align:center;">
             <div style="font-family:'Rajdhani',sans-serif;font-size:9px;letter-spacing:0.2em;color:#e8a020;text-transform:uppercase;margin-bottom:3px;">Commander</div>
-            <div style="font-family:'Oswald',sans-serif;font-size:13px;color:#e8e8e8;font-weight:600;letter-spacing:0.06em;">Your Server</div>
-            <div style="font-size:10px;color:#606878;margin-top:2px;">Day 500 · HQ 35</div>
+            <div style="font-family:'Oswald',sans-serif;font-size:13px;color:#e8e8e8;font-weight:600;letter-spacing:0.06em;">500+ Days Played</div>
+            <div style="font-size:10px;color:#606878;margin-top:2px;">Hardcore Player</div>
           </div>
         </div>
         <!-- Chat window -->
@@ -727,7 +780,7 @@
                 <span style="width:5px;height:5px;border-radius:50%;background:#30b870;display:inline-block;"></span> Online · Knows your full profile
               </div>
             </div>
-            <div style="margin-left:auto;font-family:'Rajdhani',sans-serif;font-size:10px;color:#606878;letter-spacing:0.1em;text-transform:uppercase;">Your Server · Day 500 · HQ 35</div>
+            <div style="margin-left:auto;font-family:'Rajdhani',sans-serif;font-size:10px;color:#606878;letter-spacing:0.1em;text-transform:uppercase;">500+ Days · Hardcore Player</div>
           </div>
           <div style="padding:24px 20px;display:flex;flex-direction:column;gap:16px;">
             <div style="display:flex;justify-content:flex-end;">
@@ -780,10 +833,66 @@
     </div>
   </section>
 
+  <!-- CONTACT -->
+  <section class="contact-section" id="contact">
+    <div class="contact-inner">
+      <div>
+        <div class="contact-label">Get In Touch</div>
+        <h2 class="contact-title">Talk to<br/>The <span>Builder.</span></h2>
+        <p class="contact-desc">
+          Buddy is built by an active Last War player on Server 1032 — HQ 35, T11, Day 508.
+          I play the game. I built the tool. I want to hear from you.
+        </p>
+        <div class="contact-reasons">
+          <div class="contact-reason">Bug report or wrong game data</div>
+          <div class="contact-reason">Feature suggestion</div>
+          <div class="contact-reason">Partnership or data integration inquiry</div>
+          <div class="contact-reason">Press or content creator inquiry</div>
+          <div class="contact-reason">Alliance or community partnership</div>
+          <div class="contact-reason">Just want to talk Last War</div>
+        </div>
+      </div>
+      <div>
+        <form class="contact-form" action="https://formspree.io/f/xjgaapnb" method="POST">
+          <div class="contact-form-group">
+            <label class="contact-form-label" for="cf-name">Name / IGN</label>
+            <input class="contact-form-input" type="text" id="cf-name" name="name" placeholder="Your name or in-game name" required/>
+          </div>
+          <div class="contact-form-group">
+            <label class="contact-form-label" for="cf-email">Email</label>
+            <input class="contact-form-input" type="email" id="cf-email" name="email" placeholder="your@email.com" required/>
+          </div>
+          <div class="contact-form-group">
+            <label class="contact-form-label" for="cf-reason">Reason</label>
+            <select class="contact-form-select" id="cf-reason" name="reason">
+              <option value="">Select a reason...</option>
+              <option value="bug">Bug / Wrong Game Data</option>
+              <option value="feature">Feature Request</option>
+              <option value="partner">Partnership / Data Integration</option>
+              <option value="press">Press / Content Creator</option>
+              <option value="community">Alliance / Community</option>
+              <option value="other">Just Saying Hi</option>
+            </select>
+          </div>
+          <div class="contact-form-group">
+            <label class="contact-form-label" for="cf-message">Message</label>
+            <textarea class="contact-form-textarea" id="cf-message" name="message" placeholder="What's on your mind?" required></textarea>
+          </div>
+          <button type="submit" class="contact-submit">Send Message →</button>
+          <div class="contact-success">
+            <p><strong>Message received.</strong> I'll get back to you — usually within 24 hours.</p>
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+
   <!-- FOOTER -->
   <footer>
     <div class="footer-logo">Last War: Survival <span>Buddy</span></div>
     <div class="footer-note">Built specifically for <strong style="color:#8090a0;">Last War: Survival</strong> (FUNFLY PTE. LTD.) · Not affiliated with or endorsed by the developer · Fan-built community tool</div>
   </footer>
+
+
 </body>
 </html>
