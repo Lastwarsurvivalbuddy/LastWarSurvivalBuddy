@@ -86,8 +86,6 @@
       max-width: 600px; margin: 0 auto 16px; font-weight: 300;
       animation: fadeUp 0.8s 0.3s ease both; }
     .hero-sub strong { color: var(--text); font-weight: 600; }
-
-    /* FIX 2: Battle Report hero callout — standalone block, not a footnote */
     .hero-battle-callout {
       display: inline-flex; align-items: center; gap: 12px;
       background: rgba(192,40,26,0.12); border: 1px solid rgba(192,40,26,0.35);
@@ -99,7 +97,6 @@
       letter-spacing: 0.2em; text-transform: uppercase; color: #e07060; margin-bottom: 3px; }
     .hero-battle-callout-body { font-size: 14px; color: var(--text); font-weight: 600; line-height: 1.4; }
     .hero-battle-callout-body span { color: #e8806a; }
-
     .hero-tagline { font-family: 'Rajdhani', sans-serif; font-size: 14px; font-weight: 600;
       letter-spacing: 0.2em; color: var(--gold); text-transform: uppercase;
       margin-bottom: 48px; animation: fadeUp 0.8s 0.4s ease both; }
@@ -172,10 +169,15 @@
       background: linear-gradient(160deg, #1a0806, var(--card)); }
     .feature-card.hero-feature::before { background: linear-gradient(90deg, transparent, rgba(192,40,26,0.4), transparent); }
     .feature-card.hero-feature:hover { border-color: rgba(232,80,40,0.6); }
+    .feature-card.war-room-feature { border-color: rgba(192,144,32,0.4);
+      background: linear-gradient(160deg, #120e02, var(--card)); }
+    .feature-card.war-room-feature::before { background: linear-gradient(90deg, transparent, rgba(232,160,32,0.3), transparent); }
+    .feature-card.war-room-feature:hover { border-color: rgba(232,160,32,0.5); }
     .feature-icon { width: 48px; height: 48px; border-radius: 12px;
       display: flex; align-items: center; justify-content: center; font-size: 22px;
       margin-bottom: 18px; background: rgba(232,160,32,0.08); border: 1px solid rgba(232,160,32,0.15); }
     .feature-icon.red { background: rgba(192,40,26,0.15); border-color: rgba(192,40,26,0.3); }
+    .feature-icon.amber { background: rgba(232,160,32,0.12); border-color: rgba(232,160,32,0.25); }
     .feature-title { font-family: 'Oswald', sans-serif; font-size: 18px; font-weight: 600;
       letter-spacing: 0.06em; text-transform: uppercase; color: var(--text); margin-bottom: 10px; }
     .feature-desc { font-size: 13px; color: var(--muted2); line-height: 1.7; font-weight: 300; }
@@ -183,6 +185,7 @@
     .feature-tag { font-family: 'Rajdhani', sans-serif; font-size: 10px; font-weight: 700;
       letter-spacing: 0.12em; text-transform: uppercase; padding: 3px 8px; border-radius: 4px;
       background: rgba(192,40,26,0.15); border: 1px solid rgba(192,40,26,0.3); color: #e06050; }
+    .feature-tag.amber { background: rgba(232,160,32,0.12); border-color: rgba(232,160,32,0.3); color: var(--gold); }
     .feature-new-badge { display: inline-flex; align-items: center; gap: 5px;
       font-family: 'Rajdhani', sans-serif; font-size: 10px; font-weight: 700;
       letter-spacing: 0.15em; text-transform: uppercase;
@@ -190,6 +193,13 @@
       color: #e07060; border-radius: 100px; padding: 3px 10px; margin-bottom: 12px; }
     .feature-new-badge::before { content: ''; width: 5px; height: 5px; border-radius: 50%;
       background: #e07060; box-shadow: 0 0 6px #e07060; }
+    .feature-free-badge { display: inline-flex; align-items: center; gap: 5px;
+      font-family: 'Rajdhani', sans-serif; font-size: 10px; font-weight: 700;
+      letter-spacing: 0.15em; text-transform: uppercase;
+      background: rgba(48,184,112,0.15); border: 1px solid rgba(48,184,112,0.35);
+      color: var(--green); border-radius: 100px; padding: 3px 10px; margin-bottom: 12px; }
+    .feature-free-badge::before { content: ''; width: 5px; height: 5px; border-radius: 50%;
+      background: var(--green); box-shadow: 0 0 6px var(--green); }
 
     /* ── BATTLE REPORT BANNER ── */
     .battle-report-banner { position: relative; z-index: 1;
@@ -223,6 +233,37 @@
     .battle-report-tile-label { font-family: 'Oswald', sans-serif; font-size: 13px; font-weight: 600;
       letter-spacing: 0.06em; text-transform: uppercase; color: var(--text); margin-bottom: 4px; }
     .battle-report-tile-desc { font-size: 11px; color: var(--muted); line-height: 1.5; }
+
+    /* ── WAR ROOM BANNER ── */
+    .war-room-banner { position: relative; z-index: 1;
+      background: linear-gradient(135deg, #120e02, #0e1014, #0a0c10);
+      border-top: 1px solid rgba(232,160,32,0.2); border-bottom: 1px solid rgba(232,160,32,0.2);
+      padding: 60px 5%; }
+    .war-room-inner { max-width: 960px; margin: 0 auto; display: grid;
+      grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; }
+    .war-room-label { font-family: 'Rajdhani', sans-serif; font-size: 11px; font-weight: 700;
+      letter-spacing: 0.3em; color: var(--gold); text-transform: uppercase; margin-bottom: 12px;
+      display: flex; align-items: center; gap: 8px; }
+    .war-room-label::before { content: ''; width: 6px; height: 6px; border-radius: 50%;
+      background: var(--gold); box-shadow: 0 0 8px var(--gold); animation: pulse 2s infinite; }
+    .war-room-title { font-family: 'Oswald', sans-serif; font-size: clamp(26px, 3.5vw, 40px);
+      font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
+      color: var(--text); margin-bottom: 16px; line-height: 1.1; }
+    .war-room-title span { color: var(--gold); }
+    .war-room-desc { font-size: 14px; color: var(--muted2); line-height: 1.85;
+      font-weight: 300; margin-bottom: 24px; }
+    .war-room-free-pill { display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(48,184,112,0.1); border: 1px solid rgba(48,184,112,0.3);
+      border-radius: 100px; padding: 6px 16px; margin-bottom: 20px; }
+    .war-room-free-pill span { font-family: 'Rajdhani', sans-serif; font-size: 11px; font-weight: 700;
+      letter-spacing: 0.2em; text-transform: uppercase; color: var(--green); }
+    .war-room-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .war-room-tile { background: rgba(14,16,20,0.8); border: 1px solid rgba(232,160,32,0.15);
+      border-radius: 10px; padding: 16px; }
+    .war-room-tile-icon { font-size: 20px; margin-bottom: 8px; }
+    .war-room-tile-label { font-family: 'Oswald', sans-serif; font-size: 13px; font-weight: 600;
+      letter-spacing: 0.06em; text-transform: uppercase; color: var(--text); margin-bottom: 4px; }
+    .war-room-tile-desc { font-size: 11px; color: var(--muted); line-height: 1.5; }
 
     /* ── SOCIAL PROOF ── */
     .social-proof { position: relative; z-index: 1; padding: 72px 5%;
@@ -279,6 +320,8 @@
     .price-feature strong { color: var(--text); font-weight: 600; }
     .price-feature.highlight { color: #e07060; }
     .price-feature.highlight strong { color: #e8806a; }
+    .price-feature.war-room { color: var(--gold); }
+    .price-feature.war-room strong { color: var(--gold); }
     .price-badge { font-family: 'Rajdhani', sans-serif; font-size: 9px; font-weight: 700;
       letter-spacing: 0.15em; text-transform: uppercase; border-radius: 4px; padding: 2px 8px; }
     .price-header { display: flex; align-items: center; justify-content: space-between; }
@@ -406,6 +449,7 @@
       .stat-divider { display: none; }
       .learning-inner { grid-template-columns: 1fr; gap: 40px; }
       .battle-report-inner { grid-template-columns: 1fr; gap: 32px; }
+      .war-room-inner { grid-template-columns: 1fr; gap: 32px; }
       .bottom-signup { flex-direction: column; }
       .bottom-signup input { width: 100%; }
       .bottom-signup-btn { width: 100%; }
@@ -421,6 +465,7 @@
       .hero-title .block { letter-spacing: 0.08em; }
       .pricing-grid { grid-template-columns: 1fr; }
       .battle-report-grid { grid-template-columns: 1fr; }
+      .war-room-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -455,8 +500,6 @@
       Tell us your server, your level, your goals —<br/>
       we'll tell you <strong>exactly what to do today.</strong>
     </p>
-
-    <!-- FIX 2: Battle Report as a proper hero feature callout, not a footnote -->
     <div class="hero-battle-callout">
       <div class="hero-battle-callout-icon">⚔️</div>
       <div class="hero-battle-callout-text">
@@ -464,10 +507,7 @@
         <div class="hero-battle-callout-body">Battle Report Analyzer — <span>find out exactly why you won or lost.</span><br/>No other Last War tool does this.</div>
       </div>
     </div>
-
     <div class="hero-tagline">The smarter you play — the smarter it gets</div>
-
-    <!-- FIX 1: "NOW IN EARLY ACCESS" — app is live -->
     <div class="cta-group">
       <div class="cta-box">
         <div class="cta-box-label">⚡ Launching April 19, 2026</div>
@@ -495,7 +535,7 @@
     </div>
   </section>
 
-  <!-- FOUNDING MEMBER BANNER — FIX 3: removed "0 of 500 claimed" counter, replaced with urgency copy -->
+  <!-- FOUNDING MEMBER BANNER -->
   <div style="position:relative;z-index:1;background:linear-gradient(135deg,#1a0a04,#0e1014);border-top:1px solid rgba(232,160,32,0.25);border-bottom:1px solid rgba(232,160,32,0.25);padding:20px 5%;display:flex;align-items:center;justify-content:center;gap:32px;flex-wrap:wrap;">
     <div style="display:flex;align-items:center;gap:10px;">
       <div style="width:10px;height:10px;border-radius:50%;background:#e8a020;box-shadow:0 0 12px #e8a020;animation:pulse 2s infinite;"></div>
@@ -536,6 +576,8 @@
     <div class="stat-divider"></div>
     <div class="stat"><span class="stat-number">⚔️</span><span class="stat-label">Battle Report Analyzer</span></div>
     <div class="stat-divider"></div>
+    <div class="stat"><span class="stat-number">🏜️</span><span class="stat-label">DS War Room</span></div>
+    <div class="stat-divider"></div>
     <div class="stat"><span class="stat-number">0</span><span class="stat-label">Discord Scrolling Required</span></div>
   </div>
 
@@ -543,7 +585,7 @@
   <section class="battle-report-banner">
     <div class="battle-report-inner">
       <div>
-        <div class="battle-report-label">New Feature</div>
+        <div class="battle-report-label">Pro Feature</div>
         <h2 class="battle-report-title">
           Battle Report<br/><span>Analyzer</span>
         </h2>
@@ -593,6 +635,63 @@
     </div>
   </section>
 
+  <!-- DESERT STORM WAR ROOM FEATURE SECTION -->
+  <section class="war-room-banner">
+    <div class="war-room-inner">
+      <div>
+        <div class="war-room-label">Free for All Players</div>
+        <h2 class="war-room-title">
+          Desert Storm<br/><span>War Room</span>
+        </h2>
+        <div class="war-room-free-pill">
+          <span>✓ Free — No subscription required</span>
+        </div>
+        <p class="war-room-desc">
+          Alliance leaders: stop typing your DS plan in alliance chat last second.
+          Fill in your roles, hit generate — get a clean shareable strategy card
+          with your alliance name, role assignments, compass, and stage-by-stage
+          instructions. Save it. Post it. Done in 30 seconds.
+        </p>
+        <a href="#notify" onclick="document.querySelector('.hero').scrollIntoView({behavior:'smooth'});return false;"
+          style="display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#c06010,#e8a020);border:none;border-radius:8px;padding:13px 24px;color:#fff;font-family:'Oswald',sans-serif;font-size:14px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;box-shadow:0 4px 20px rgba(232,160,32,0.3);transition:all 0.2s;text-decoration:none;">
+          🏜️ Launching April 19, 2026 — Join the List →
+        </a>
+      </div>
+      <div class="war-room-grid">
+        <div class="war-room-tile">
+          <div class="war-room-tile-icon">🔴</div>
+          <div class="war-room-tile-label">Roamers</div>
+          <div class="war-room-tile-desc">Your 4–6 strongest fighters. Eliminate enemies, support flanks, flood the Silo at Stage 2.</div>
+        </div>
+        <div class="war-room-tile">
+          <div class="war-room-tile-icon">🔵</div>
+          <div class="war-room-tile-label">West Flank</div>
+          <div class="war-room-tile-desc">Rush west at the horn. Oil Refinery + Info Center for the +10% point boost.</div>
+        </div>
+        <div class="war-room-tile">
+          <div class="war-room-tile-icon">🟢</div>
+          <div class="war-room-tile-label">East Flank</div>
+          <div class="war-room-tile-desc">Rush east at the horn. Oil Refinery + Science Hub to cut enemy teleport cooldown.</div>
+        </div>
+        <div class="war-room-tile">
+          <div class="war-room-tile-icon">🟡</div>
+          <div class="war-room-tile-label">Hospital Guards</div>
+          <div class="war-room-tile-desc">Hold all 4 Field Hospitals. 15 troops heal every 10 seconds. Do not leave.</div>
+        </div>
+        <div class="war-room-tile">
+          <div class="war-room-tile-icon">🟣</div>
+          <div class="war-room-tile-label">Nuclear Silo</div>
+          <div class="war-room-tile-desc">Stage 2 only (10 min mark). Rush immediately. Highest point yield in the game.</div>
+        </div>
+        <div class="war-room-tile">
+          <div class="war-room-tile-icon">🧭</div>
+          <div class="war-room-tile-label">Compass Included</div>
+          <div class="war-room-tile-desc">Every card has a NSEW compass. Your members will actually know which way to go.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- FEATURES -->
   <section class="features">
     <div class="section-label">What It Does</div>
@@ -602,7 +701,7 @@
     </p>
     <div class="features-grid">
       <div class="feature-card hero-feature">
-        <div class="feature-new-badge">New</div>
+        <div class="feature-new-badge">Pro+</div>
         <div class="feature-icon red">⚔️</div>
         <div class="feature-title">Battle Report Analyzer</div>
         <div class="feature-desc">
@@ -613,6 +712,21 @@
           <span class="feature-tag">Pro+</span>
           <span class="feature-tag">Multi-screenshot</span>
           <span class="feature-tag">Instant coaching</span>
+        </div>
+      </div>
+      <div class="feature-card war-room-feature">
+        <div class="feature-free-badge">Free — All Players</div>
+        <div class="feature-icon amber">🏜️</div>
+        <div class="feature-title">Desert Storm War Room</div>
+        <div class="feature-desc">
+          Alliance leaders: assign roles, generate a shareable battle plan card,
+          post it straight to alliance chat. Compass included. Takes 30 seconds.
+          Every card carries your URL.
+        </div>
+        <div class="feature-tags">
+          <span class="feature-tag amber">Free</span>
+          <span class="feature-tag amber">Shareable card</span>
+          <span class="feature-tag amber">Alliance leaders</span>
         </div>
       </div>
       <div class="feature-card">
@@ -647,18 +761,10 @@
           and hero stats — then tells you what to fix first.
         </div>
       </div>
-      <div class="feature-card">
-        <div class="feature-icon">🔔</div>
-        <div class="feature-title">Event Alerts</div>
-        <div class="feature-desc">
-          Never miss a Hot Deal, Kill Event, or Marshal's Guard again. Alerts timed to your server —
-          not a generic schedule that's always slightly off.
-        </div>
-      </div>
     </div>
   </section>
 
-  <!-- FIX 5: SOCIAL PROOF — quote strip before pricing -->
+  <!-- SOCIAL PROOF -->
   <section class="social-proof">
     <div class="social-proof-inner">
       <div class="social-proof-label">Early Access Players</div>
@@ -719,6 +825,7 @@
           <div class="price-feature">✦ No screenshots</div>
           <div class="price-feature">✦ Daily action plan</div>
           <div class="price-feature">✦ Commander Card</div>
+          <div class="price-feature war-room">✦ <strong>🏜️ DS War Room</strong></div>
         </div>
         <!-- Pro -->
         <div class="price-card">
@@ -731,6 +838,7 @@
           <div class="price-feature highlight">✦ <strong>⚔️ 3 Battle Reports</strong> / day</div>
           <div class="price-feature">✦ Pack Scanner</div>
           <div class="price-feature">✦ Daily action plan</div>
+          <div class="price-feature war-room">✦ <strong>🏜️ DS War Room</strong></div>
         </div>
         <!-- Elite -->
         <div class="price-card gold-card">
@@ -746,6 +854,7 @@
           <div class="price-feature highlight">✦ <strong>⚔️ 5 Battle Reports</strong> / day</div>
           <div class="price-feature">✦ Pack Scanner</div>
           <div class="price-feature">✦ Priority features</div>
+          <div class="price-feature war-room">✦ <strong>🏜️ DS War Room</strong></div>
         </div>
         <!-- Founding Member -->
         <div class="price-card purple-card">
@@ -762,11 +871,12 @@
           <div class="price-feature">✦ Pack Scanner</div>
           <div class="price-feature" style="color:var(--purple2);">✦ Every future feature</div>
           <div class="price-feature" style="color:var(--purple2);">✦ Founding Member badge</div>
+          <div class="price-feature war-room">✦ <strong>🏜️ DS War Room</strong></div>
         </div>
       </div>
       <div style="margin-top:32px;text-align:center;font-size:12px;color:var(--muted);line-height:1.8;">
-        All tiers include the Daily Action Plan and Commander Card. Battle Report Analyzer requires Pro or higher.<br/>
-        Founding Member is a limited lifetime tier — not a subscription. 500 spots total, offered to the waitlist first at launch.
+        All tiers include the Daily Action Plan, Commander Card, and Desert Storm War Room.<br/>
+        Battle Report Analyzer requires Pro or higher. Founding Member is a limited lifetime tier — 500 spots total.
       </div>
     </div>
   </section>
@@ -806,7 +916,7 @@
     </div>
   </section>
 
-  <!-- COMMAND PROMPT PREVIEW — FIX 4: Battle Report question replaces pack question -->
+  <!-- COMMAND PROMPT PREVIEW -->
   <section style="position:relative;z-index:1;padding:100px 5%;background:linear-gradient(180deg,transparent,rgba(14,16,20,0.8),transparent);">
     <div style="max-width:800px;margin:0 auto;">
       <div style="text-align:center;margin-bottom:48px;">
@@ -862,7 +972,7 @@
             <div style="font-size:10px;color:#606878;margin-top:2px;">Hardcore Player</div>
           </div>
         </div>
-        <!-- Chat window — FIX 4: Battle Report question -->
+        <!-- Chat window -->
         <div style="flex:1;min-width:280px;background:#0e1014;border:1px solid #2a3040;border-radius:16px;overflow:hidden;box-shadow:0 32px 80px rgba(0,0,0,0.6);">
           <div style="background:#13161c;border-bottom:1px solid #222830;padding:14px 20px;display:flex;align-items:center;gap:12px;">
             <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#c06010,#e8a020);display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 0 16px rgba(232,160,32,0.3);">🪖</div>
