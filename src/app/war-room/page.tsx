@@ -19,10 +19,7 @@ export default function WarRoomPage() {
   const planCardRef = useRef<HTMLDivElement>(null);
 
   function parseNames(raw: string): string[] {
-    return raw
-      .split(/[,\n]+/)
-      .map(s => s.trim())
-      .filter(Boolean);
+    return raw.split(/[,\n]+/).map(s => s.trim()).filter(Boolean);
   }
 
   function handleGenerate() {
@@ -38,16 +35,14 @@ export default function WarRoomPage() {
     try {
       const html2canvas = (await import('html2canvas')).default;
       const el = planCardRef.current;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const canvas = await html2canvas(el, {
-        background: '#ffffff',
         useCORS: true,
         logging: false,
         width: el.offsetWidth,
         height: el.offsetHeight,
       } as any);
       const url = canvas.toDataURL('image/png');
-      // Mobile: show overlay with press-and-hold instruction
-      // Desktop: trigger download
       const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
       if (isMobile) {
         const overlay = document.createElement('div');
@@ -84,6 +79,7 @@ export default function WarRoomPage() {
 
   return (
     <div className="min-h-screen bg-gray-950 text-white">
+
       {/* Header */}
       <div className="border-b border-gray-800 bg-gray-950 sticky top-0 z-10">
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center gap-3">
@@ -106,7 +102,7 @@ export default function WarRoomPage() {
         {/* Intro */}
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
           <p className="text-sm text-gray-300 leading-relaxed">
-            Assign roles for your Desert Storm battle. Generate a shareable plan card — screenshot it and post straight to alliance chat.
+            Assign roles for your Desert Storm battle. Generate a shareable plan card — save it and post straight to alliance chat.
           </p>
         </div>
 
@@ -149,15 +145,10 @@ export default function WarRoomPage() {
             {DS_ROLES.map((role: DSRole) => (
               <div
                 key={role.id}
-                className={`bg-gray-900 border border-gray-800 rounded-xl p-3 space-y-2 ${
-                  role.fullWidth ? 'col-span-2' : ''
-                }`}
+                className={`bg-gray-900 border border-gray-800 rounded-xl p-3 space-y-2 ${role.fullWidth ? 'col-span-2' : ''}`}
               >
                 <div className="flex items-center gap-2">
-                  <span
-                    className="w-2 h-2 rounded-full flex-shrink-0"
-                    style={{ backgroundColor: role.color }}
-                  />
+                  <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: role.color }} />
                   <span className="text-xs font-medium text-gray-300">{role.label}</span>
                 </div>
                 <p className="text-xs text-gray-500 leading-relaxed">{role.hint}</p>
@@ -193,74 +184,80 @@ export default function WarRoomPage() {
           Generate battle plan
         </button>
 
-        {/* ─── OUTPUT CARD ─── */}
+        {/* ─── OUTPUT CARD — all inline styles for html2canvas ─── */}
         {planGenerated && (
           <div className="space-y-3">
 
-            {/* Printable card — white bg for screenshot */}
             <div
               ref={planCardRef}
-              className="bg-white text-gray-900 rounded-2xl border border-gray-200"
-              style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}
+              style={{
+                background: '#ffffff',
+                borderRadius: '16px',
+                border: '1px solid #e5e7eb',
+                fontFamily: 'system-ui, -apple-system, sans-serif',
+                overflow: 'hidden',
+              }}
             >
               {/* Card header */}
-              <div className="bg-gray-950 px-5 py-4">
-                <div className="flex items-start justify-between gap-3">
+              <div style={{ background: '#030712', padding: '16px 20px' }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}>
                   <div>
-                    <div className="text-white font-semibold text-base leading-tight">
+                    <div style={{ color: '#ffffff', fontWeight: 600, fontSize: '15px', lineHeight: '1.3' }}>
                       {displayName}
                     </div>
-                    <div className="text-gray-400 text-xs mt-0.5">
+                    <div style={{ color: '#9ca3af', fontSize: '11px', marginTop: '3px' }}>
                       Desert Storm War Room · Task Force {taskForce}
                     </div>
                   </div>
                   {/* Compass */}
-                  <svg width="48" height="48" viewBox="0 0 48 48" className="flex-shrink-0">
+                  <svg width="48" height="48" viewBox="0 0 48 48" style={{ flexShrink: 0 }}>
                     <circle cx="24" cy="24" r="22" fill="none" stroke="#374151" strokeWidth="1"/>
                     <circle cx="24" cy="24" r="2.5" fill="#6B7280"/>
-                    {/* N needle */}
                     <polygon points="24,5 21.5,24 24,20 26.5,24" fill="#E24B4A"/>
-                    {/* S needle */}
                     <polygon points="24,43 21.5,24 24,28 26.5,24" fill="#4B5563"/>
-                    {/* Labels */}
                     <text x="24" y="4" textAnchor="middle" fontSize="8" fontWeight="600" fill="#E24B4A" fontFamily="system-ui">N</text>
-                    <text x="24" y="47" textAnchor="middle" fontSize="8" fill="#6B7280" fontFamily="system-ui">S</text>
-                    <text x="45" y="27" textAnchor="middle" fontSize="8" fill="#6B7280" fontFamily="system-ui">E</text>
-                    <text x="3" y="27" textAnchor="middle" fontSize="8" fill="#6B7280" fontFamily="system-ui">W</text>
+                    <text x="24" y="47" textAnchor="middle" fontSize="8" fill="#9CA3AF" fontFamily="system-ui">S</text>
+                    <text x="45" y="27" textAnchor="middle" fontSize="8" fill="#9CA3AF" fontFamily="system-ui">E</text>
+                    <text x="3" y="27" textAnchor="middle" fontSize="8" fill="#9CA3AF" fontFamily="system-ui">W</text>
                   </svg>
                 </div>
               </div>
 
               {/* Stage timeline strip */}
-              <div className="bg-gray-100 px-5 py-2 flex flex-wrap gap-x-4 gap-y-1">
+              <div style={{ background: '#f3f4f6', padding: '8px 20px', display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
                 {DS_STAGES.map((s, i) => (
-                  <div key={i} className="text-xs text-gray-500">
-                    <span className="font-medium text-gray-700">{s.stage}</span>
+                  <div key={i} style={{ fontSize: '11px', color: '#6b7280', fontWeight: 500 }}>
+                    {s.stage}
                   </div>
                 ))}
               </div>
 
               {/* Role rows */}
-              <div className="px-5 py-4 space-y-3">
+              <div style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {DS_ROLES.map((role: DSRole) => {
                   const names = parseNames(roles[role.id] ?? '');
                   return (
-                    <div key={role.id} className="flex gap-3 items-start">
-                      <span
-                        className="flex-shrink-0 text-xs font-semibold px-2 py-0.5 rounded-full mt-0.5"
-                        style={{
-                          backgroundColor: role.badgeBg.replace('0.12', '0.15'),
-                          color: role.color,
-                        }}
-                      >
+                    <div key={role.id} style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+                      <span style={{
+                        flexShrink: 0,
+                        fontSize: '10px',
+                        fontWeight: 600,
+                        padding: '2px 8px',
+                        borderRadius: '20px',
+                        marginTop: '1px',
+                        backgroundColor: role.badgeBg,
+                        color: role.color,
+                        whiteSpace: 'nowrap',
+                      }}>
                         {role.label}
                       </span>
-                      <div className="min-w-0">
-                        <div className="text-xs text-gray-600 leading-snug">{role.stageAdvice}</div>
-                        <div className="text-xs font-medium text-gray-900 mt-0.5">
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontSize: '11px', color: '#6b7280', lineHeight: '1.5' }}>{role.stageAdvice}</div>
+                        <div style={{ fontSize: '11px', fontWeight: 600, color: '#111827', marginTop: '2px' }}>
                           {names.length
                             ? `→ ${names.join(', ')}`
-                            : <span className="text-gray-400 italic">Unassigned</span>}
+                            : <span style={{ color: '#9ca3af', fontStyle: 'italic' }}>Unassigned</span>
+                          }
                         </div>
                       </div>
                     </div>
@@ -270,22 +267,24 @@ export default function WarRoomPage() {
 
               {/* Commander note */}
               {commanderNote.trim() && (
-                <div className="mx-5 mb-4 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-                  <p className="text-xs text-amber-800 italic">
+                <div style={{ margin: '0 20px 16px', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '8px', padding: '8px 12px' }}>
+                  <p style={{ fontSize: '11px', color: '#92400e', fontStyle: 'italic', margin: 0 }}>
                     📋 {commanderNote}
                   </p>
                 </div>
               )}
 
               {/* Footer */}
-              <div className="bg-gray-950 px-5 py-3 flex items-center justify-between">
+              <div style={{ background: '#030712', padding: '12px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div>
-                  <div className="text-white text-xs font-semibold tracking-wide">
+                  <div style={{ color: '#ffffff', fontSize: '11px', fontWeight: 600, letterSpacing: '0.05em' }}>
                     LastWarSurvivalBuddy.com
                   </div>
-                  <div className="text-gray-500 text-xs">AI coaching for Last War: Survival</div>
+                  <div style={{ color: '#6b7280', fontSize: '10px', marginTop: '1px' }}>
+                    AI coaching for Last War: Survival
+                  </div>
                 </div>
-                <div className="text-gray-600 text-xs text-right">
+                <div style={{ color: '#4b5563', fontSize: '10px', textAlign: 'right' }}>
                   Desert Storm<br />Battle Plan
                 </div>
               </div>
