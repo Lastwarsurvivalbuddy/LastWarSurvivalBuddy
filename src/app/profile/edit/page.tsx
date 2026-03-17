@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import {
@@ -110,6 +110,23 @@ export default function ProfileEditPage() {
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle')
   const [errorMsg, setErrorMsg] = useState('')
 
+  // Snapshot of last-saved form — used to compute isDirty
+  const savedSnapshot = useRef<ProfileForm | null>(null)
+  const isDirty = savedSnapshot.current !== null &&
+    JSON.stringify(form) !== JSON.stringify(savedSnapshot.current)
+
+  // Warn on browser refresh / tab close when dirty
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (isDirty) {
+        e.preventDefault()
+        e.returnValue = ''
+      }
+    }
+    window.addEventListener('beforeunload', handler)
+    return () => window.removeEventListener('beforeunload', handler)
+  }, [isDirty])
+
   useEffect(() => { loadProfile() }, [])
 
   useEffect(() => {
@@ -147,7 +164,7 @@ export default function ProfileEditPage() {
 
       if (error) throw error
 
-      setForm({
+      const loaded: ProfileForm = {
         commander_name:            data.commander_name || '',
         server_number:             data.server_number?.toString() || '',
         server_day:                data.server_day?.toString() || '',
@@ -165,7 +182,10 @@ export default function ProfileEditPage() {
         alliance_name:             data.alliance_name || '',
         alliance_tag:              data.alliance_tag || '',
         beginner_mode:             data.beginner_mode ?? false,
-      })
+      }
+
+      setForm(loaded)
+      savedSnapshot.current = loaded
       setOriginalName(data.commander_name || '')
     } catch {
       setErrorMsg('Failed to load profile.')
@@ -178,6 +198,15 @@ export default function ProfileEditPage() {
     setForm(prev => ({ ...prev, [field]: value }))
     setSaveStatus('idle')
   }
+
+  // Navigate back — warn if dirty
+  const handleBack = useCallback(() => {
+    if (isDirty) {
+      const confirmed = window.confirm('You have unsaved changes. Leave without saving?')
+      if (!confirmed) return
+    }
+    router.push('/dashboard')
+  }, [isDirty, router])
 
   async function handleSave() {
     setErrorMsg('')
@@ -228,6 +257,8 @@ export default function ProfileEditPage() {
 
       if (error) throw error
 
+      // Update snapshot so isDirty resets to false
+      savedSnapshot.current = { ...form }
       setOriginalName(form.commander_name)
       setSaveStatus('saved')
       setTimeout(() => setSaveStatus('idle'), 2500)
@@ -258,15 +289,17 @@ export default function ProfileEditPage() {
       <header className="border-b border-zinc-800/80 bg-zinc-950/95 sticky top-0 z-20 backdrop-blur-sm">
         <div className="max-w-2xl mx-auto px-4 h-12 flex items-center justify-between">
           <button
-            onClick={() => router.push('/dashboard')}
+            onClick={handleBack}
             className="flex items-center gap-1.5 text-zinc-400 hover:text-white transition-colors text-sm"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 16 16">
               <path d="M10 3L5 8l5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
-            Dashboard
+            {isDirty ? <span className="text-amber-400">Dashboard</span> : 'Dashboard'}
           </button>
-          <span className="text-xs font-mono text-zinc-500 tracking-widest uppercase">Edit Profile</span>
+          <span className="text-xs font-mono text-zinc-500 tracking-widest uppercase">
+            Edit Profile{isDirty ? <span className="text-amber-500 ml-1">·</span> : ''}
+          </span>
           <button
             onClick={handleSave}
             disabled={saveStatus === 'saving'}
@@ -276,7 +309,9 @@ export default function ProfileEditPage() {
                 ? 'bg-green-700 text-green-100'
                 : saveStatus === 'saving'
                 ? 'bg-zinc-700 text-zinc-400 cursor-wait'
-                : 'bg-amber-500 hover:bg-amber-400 text-black active:scale-95'}
+                : isDirty
+                ? 'bg-amber-500 hover:bg-amber-400 text-black active:scale-95'
+                : 'bg-zinc-700 text-zinc-500 cursor-default'}
             `}
           >
             {saveStatus === 'saving' ? 'Saving...' : saveStatus === 'saved' ? '✓ Saved' : 'Save'}
@@ -486,7 +521,6 @@ export default function ProfileEditPage() {
                 : 'border-zinc-700 hover:border-zinc-500 bg-zinc-900/40'}
             `}
           >
-            {/* Toggle pill */}
             <div className={`
               relative mt-0.5 flex-shrink-0 w-10 h-5 rounded-full transition-colors duration-200
               ${form.beginner_mode ? 'bg-amber-500' : 'bg-zinc-600'}
@@ -496,7 +530,6 @@ export default function ProfileEditPage() {
                 ${form.beginner_mode ? 'translate-x-5' : 'translate-x-0.5'}
               `} />
             </div>
-            {/* Text */}
             <div className="flex-1 min-w-0">
               <div className="text-sm font-semibold text-zinc-100">Beginner Mode</div>
               <div className="text-[11px] text-zinc-500 mt-1 leading-relaxed">{BEGINNER_MODE_DESCRIPTION}</div>
@@ -606,10 +639,12 @@ export default function ProfileEditPage() {
                 ? 'bg-green-700 text-green-100'
                 : saveStatus === 'saving'
                 ? 'bg-zinc-700 text-zinc-400 cursor-wait'
-                : 'bg-amber-500 hover:bg-amber-400 text-black'}
+                : isDirty
+                ? 'bg-amber-500 hover:bg-amber-400 text-black'
+                : 'bg-zinc-700 text-zinc-500'}
             `}
           >
-            {saveStatus === 'saving' ? 'Saving...' : saveStatus === 'saved' ? '✓ Profile Saved' : 'Save Changes'}
+            {saveStatus === 'saving' ? 'Saving...' : saveStatus === 'saved' ? '✓ Profile Saved' : isDirty ? 'Save Changes' : 'No Changes'}
           </button>
         </div>
 
