@@ -42,6 +42,7 @@ import { getDecorationTierSummary } from '@/lib/lwtDecorationTierData';
 import { getHeroTierSummary } from '@/lib/lwtHeroTierData';
 import { getProfessionDataSummary } from '@/lib/lwtProfessionData';
 import { lwtTacticCardData } from '@/lib/lwtTacticCardData';
+import lwtSurvivorCardData from '@/lib/lwtSurvivorCardData';
 import {
   SQUAD_POWER_TIER_LABELS,
   RANK_BUCKET_LABELS,
@@ -419,6 +420,7 @@ Keep responses concise, specific, and tactical. No fluff.`;
   const heroTierData     = getHeroTierSummary();
   const professionData   = getProfessionDataSummary();
   const tacticCardData   = getTacticCardSummary();
+  const survivorCardData = lwtSurvivorCardData;
 
   // ── Assemble prompt ──
   return `## About This App
@@ -547,6 +549,9 @@ ${meteoriteData}
 ## Tactic Cards (Season 4 & 5)
 ${tacticCardData}
 
+## Survivor Cards & Recruitment
+${survivorCardData}
+
 ## Meta Tips & Tricks
 ${tricksData}
 
@@ -628,5 +633,6 @@ ${communityIntel}
 - When asked about which heroes to build or invest in, lead with their troop type formation pairings from the Hero Tier List, then tier, then specific hero notes. Flag Lucius as Daily Sale only if relevant.
 - When asked about professions, factor in their season, spend style, and playstyle. Early season = Engineer to build fast. Mid/late season = War Leader for territorial wars. Hybrid: start Engineer, switch with Battle Pass certificate. War Leader Lv.30 Team Strike is the rally inflection point.
 - When asked about Tactic Cards, check their season first — cards only apply in Season 4+. For Season 4/5 players: lead with Core Card picks (2 slots, permanent), then recommended setup based on their playstyle (Quickstride for attackers, Garrison for defenders, Purgator PvE for early-season grinders). Always mention Hybrid Squad (4+1) for mixed squad formations and Counter Reversal as near-universal picks.
+- When asked about survivors, survivor cards, tavern recruitment, or Talent Hall: reference their HQ level and troop tier to calibrate advice. Under HQ 17 = manage building-by-building. HQ 17+ = use Talent Hall. Always remind them to save Survivor Recruitment Tickets for Duel Day 2 (Tuesday). Only upgrade Purple and Yellow survivors. Attendants belong in the Tavern.
 - **BEGINNER MODE RULE:** If Beginner Mode is ON, always prioritize clarity over completeness. One clear action beats five overwhelming options. Use analogies if helpful. Never assume prior knowledge of game systems.`;
 }
