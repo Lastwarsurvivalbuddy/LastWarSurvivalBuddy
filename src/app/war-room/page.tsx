@@ -40,7 +40,7 @@ export default function WarRoomPage() {
         useCORS: true,
         logging: false,
         width: el.offsetWidth,
-        height: el.offsetHeight,
+        height: el.scrollHeight,
       } as any);
       const url = canvas.toDataURL('image/png');
       const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
@@ -195,11 +195,10 @@ export default function WarRoomPage() {
                 borderRadius: '16px',
                 border: '1px solid #e5e7eb',
                 fontFamily: 'system-ui, -apple-system, sans-serif',
-                overflow: 'hidden',
               }}
             >
               {/* Card header */}
-              <div style={{ background: '#030712', padding: '16px 20px' }}>
+              <div style={{ background: '#030712', padding: '16px 20px', borderRadius: '16px 16px 0 0' }}>
                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}>
                   <div>
                     <div style={{ color: '#ffffff', fontWeight: 600, fontSize: '15px', lineHeight: '1.3' }}>
@@ -275,7 +274,7 @@ export default function WarRoomPage() {
               )}
 
               {/* Footer */}
-              <div style={{ background: '#030712', padding: '12px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ background: '#030712', padding: '12px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderRadius: '0 0 16px 16px' }}>
                 <div>
                   <div style={{ color: '#ffffff', fontSize: '11px', fontWeight: 600, letterSpacing: '0.05em' }}>
                     LastWarSurvivalBuddy.com
