@@ -4,71 +4,58 @@
 // Last War: Survival Buddy
 // ============================================================
 // Sources: lastwartutorial.com, cpt-hedge.com, lastwarhandbook.com,
-//          bluestacks.com, theriagames.com, allclash.com
-//          All mechanics verified against Boyd's endgame experience.
+// bluestacks.com, theriagames.com, allclash.com
+// All mechanics verified against Boyd's endgame experience.
 // ============================================================
 
 // ─────────────────────────────────────────────────────────────
 // SECTION 1 — TROOP TYPE COUNTER SYSTEM
 // ─────────────────────────────────────────────────────────────
-
 export const TROOP_COUNTER_MATRIX = {
   description: `
-    Last War uses a rock-paper-scissors counter system.
-    Each matchup applies a 20% damage modifier IN BOTH DIRECTIONS simultaneously,
-    creating a ~40% effective power swing total.
-    Buildings deal an additional +25% damage to Aircraft specifically in base defense.
+Last War uses a rock-paper-scissors counter system.
+Each matchup applies a 20% damage modifier IN BOTH DIRECTIONS simultaneously,
+creating a ~40% effective power swing total.
+Buildings deal an additional +25% damage to Aircraft specifically in base defense.
   `,
   counters: {
     aircraft_vs_tank: {
-      attacker: 'Aircraft',
-      defender: 'Tank',
-      result: 'Aircraft WINS',
+      attacker: 'Aircraft', defender: 'Tank', result: 'Aircraft WINS',
       damage_dealt_modifier: '+20% (Aircraft deals more to Tank)',
       damage_taken_modifier: '-20% (Aircraft takes less from Tank)',
       effective_power_swing: '+40% for Aircraft',
       notes: 'Aircraft is the endgame meta counter to Tank-heavy servers (Day 70+)',
     },
     tank_vs_missile: {
-      attacker: 'Tank',
-      defender: 'Missile',
-      result: 'Tank WINS',
+      attacker: 'Tank', defender: 'Missile', result: 'Tank WINS',
       damage_dealt_modifier: '+20% (Tank deals more to Missile)',
       damage_taken_modifier: '-20% (Tank takes less from Missile)',
       effective_power_swing: '+40% for Tank',
       notes: 'Early game meta. Tank absorbs Missile damage well.',
     },
     missile_vs_aircraft: {
-      attacker: 'Missile',
-      defender: 'Aircraft',
-      result: 'Missile WINS',
+      attacker: 'Missile', defender: 'Aircraft', result: 'Missile WINS',
       damage_dealt_modifier: '+20% (Missile deals more to Aircraft)',
       damage_taken_modifier: '-20% (Missile takes less from Aircraft)',
       effective_power_swing: '+40% for Missile',
       notes: 'Missile is the hard counter to Aircraft-dominant servers.',
     },
     aircraft_vs_missile: {
-      attacker: 'Aircraft',
-      defender: 'Missile',
-      result: 'Aircraft LOSES',
+      attacker: 'Aircraft', defender: 'Missile', result: 'Aircraft LOSES',
       damage_dealt_modifier: '-20% (Aircraft deals less to Missile)',
       damage_taken_modifier: '+20% (Aircraft takes more from Missile)',
       effective_power_swing: '-40% for Aircraft',
       notes: 'DANGEROUS. Aircraft players must scout Missile defenders before attacking.',
     },
     tank_vs_aircraft: {
-      attacker: 'Tank',
-      defender: 'Aircraft',
-      result: 'Tank LOSES',
+      attacker: 'Tank', defender: 'Aircraft', result: 'Tank LOSES',
       damage_dealt_modifier: '-20% (Tank deals less to Aircraft)',
       damage_taken_modifier: '+20% (Tank takes more from Aircraft)',
       effective_power_swing: '-40% for Tank',
       notes: 'Do not march Tank into Aircraft wall without significant power advantage.',
     },
     missile_vs_tank: {
-      attacker: 'Missile',
-      defender: 'Tank',
-      result: 'Missile LOSES',
+      attacker: 'Missile', defender: 'Tank', result: 'Missile LOSES',
       damage_dealt_modifier: '-20% (Missile deals less to Tank)',
       damage_taken_modifier: '+20% (Missile takes more from Tank)',
       effective_power_swing: '-40% for Missile',
@@ -80,22 +67,22 @@ export const TROOP_COUNTER_MATRIX = {
     implication: 'Aircraft attacking defended bases face extra punishment beyond the troop type counter. Always scout wall composition before marching Aircraft.',
   },
   real_world_example: `
-    100K Missile vs 100K Aircraft → Missile wins, ~50% army surviving.
-    100K Aircraft vs 100K Tank → Aircraft wins, ~50% army surviving.
-    100K Tank vs 100K Missile → Tank wins, ~56% army surviving.
-    Key: A 20% power disadvantage can be overcome by correct type counter.
-    A player with 2M power from wrong type can lose to 1.5M correct type.
+100K Missile vs 100K Aircraft → Missile wins, ~50% army surviving.
+100K Aircraft vs 100K Tank → Aircraft wins, ~50% army surviving.
+100K Tank vs 100K Missile → Tank wins, ~56% army surviving.
+Key: A 20% power disadvantage can be overcome by correct type counter.
+A player with 2M power from wrong type can lose to 1.5M correct type.
   `,
 };
 
 // ─────────────────────────────────────────────────────────────
 // SECTION 2 — FORMATION BONUS SYSTEM
 // ─────────────────────────────────────────────────────────────
-
 export const FORMATION_BONUS = {
   description: `
-    Unlocks after first Capitol conquest. Applies to HP, ATK, and DEF simultaneously.
-    Bonuses are multiplicative with other modifiers.
+Unlocks after first Capitol conquest.
+Applies to HP, ATK, and DEF simultaneously.
+Bonuses are multiplicative with other modifiers.
   `,
   tiers: [
     { heroes_same_type: 3, bonus_pct: 5, label: '3-same (weak)' },
@@ -109,21 +96,21 @@ export const FORMATION_BONUS = {
     implication: 'Player with this card and 4 Aircraft + 1 Murphy gets +20% not +15%',
   },
   coaching_implication: `
-    A player running 3 Aircraft + 2 Tank is getting +10% instead of +20%.
-    That 10% formation gap on top of a type counter = compounding disadvantage.
-    Always run 5-same for the troop type you main. Only break for exclusive weapon hybrid builds.
+A player running 3 Aircraft + 2 Tank is getting +10% instead of +20%.
+That 10% formation gap on top of a type counter = compounding disadvantage.
+Always run 5-same for the troop type you main.
+Only break for exclusive weapon hybrid builds.
   `,
 };
 
 // ─────────────────────────────────────────────────────────────
 // SECTION 3 — MORALE SYSTEM
 // ─────────────────────────────────────────────────────────────
-
 export const MORALE_SYSTEM = {
   description: `
-    Morale is the most underutilized combat mechanic. It scales damage linearly.
-    Morale Bonus = 1 + (Your Morale - Enemy Morale) / 100
-    A morale advantage of 20 means you deal 20% more damage.
+Morale is the most underutilized combat mechanic. It scales damage linearly.
+Morale Bonus = 1 + (Your Morale - Enemy Morale) / 100
+A morale advantage of 20 means you deal 20% more damage.
   `,
   sources: [
     'Special Forces research (morale node)',
@@ -133,11 +120,11 @@ export const MORALE_SYSTEM = {
     'Buluwark – Morale Boost tactics card (garrison: +3% per ally with same card)',
   ],
   cascade_mechanic: `
-    THE SNOWBALL: When you start losing troops, morale drops → damage drops →
-    you lose MORE troops → morale drops further → cascade to crushing defeat.
-    This explains how a "close" power matchup becomes a 90% wipe.
-    The army that gains early troop advantage snowballs to decisive victory.
-    Close battles that suddenly became one-sided = morale cascade.
+THE SNOWBALL: When you start losing troops, morale drops → damage drops → you lose MORE troops
+→ morale drops further → cascade to crushing defeat.
+This explains how a "close" power matchup becomes a 90% wipe.
+The army that gains early troop advantage snowballs to decisive victory.
+Close battles that suddenly became one-sided = morale cascade.
   `,
   war_fever: {
     name: 'War Fever',
@@ -146,16 +133,15 @@ export const MORALE_SYSTEM = {
     note: 'Attacking zombies does NOT activate War Fever. PvP kills only.',
   },
   diagnosis: `
-    If a player lost despite similar reported power and no obvious type counter,
-    morale cascade is the likely explanation. Ask: did you take early losses?
-    Did the opponent have Warmind Morale Boost stacked from prior fights?
+If a player lost despite similar reported power and no obvious type counter,
+morale cascade is the likely explanation.
+Ask: did you take early losses? Did the opponent have Warmind Morale Boost stacked from prior fights?
   `,
 };
 
 // ─────────────────────────────────────────────────────────────
 // SECTION 4 — DAMAGE FORMULA
 // ─────────────────────────────────────────────────────────────
-
 export const DAMAGE_FORMULA = {
   formula: 'Final Damage = Base ATK × Skill Multiplier × Type Advantage × Morale Bonus × Equipment Bonus × Set Bonus × Formation Bonus × (1 - Enemy DEF Reduction)',
   effective_power_formula: 'Effective Power = Base Power × Type Modifier × Morale Modifier × Formation Bonus × Equipment Bonus',
@@ -166,22 +152,21 @@ export const DAMAGE_FORMULA = {
     max_level_with_ew: 40,
   },
   key_insight: `
-    Displayed power is a POOR predictor of actual combat outcomes.
-    A 3.5M power Tank squad with full bonuses (type counter + morale + formation + EW + decos)
-    can fight with ~12.5M effective power — a 356% increase.
-    This is why a 500K player can beat a 1.5M player with smart play.
+Displayed power is a POOR predictor of actual combat outcomes.
+A 3.5M power Tank squad with full bonuses (type counter + morale + formation + EW + decos)
+can fight with ~12.5M effective power — a 356% increase.
+This is why a 500K player can beat a 1.5M player with smart play.
   `,
 };
 
 // ─────────────────────────────────────────────────────────────
 // SECTION 5 — EXCLUSIVE WEAPONS
 // ─────────────────────────────────────────────────────────────
-
 export const EXCLUSIVE_WEAPONS = {
   description: `
-    Every season releases 3 EWs — one per hero type (Tank/Aircraft/Missile).
-    Released in weeks 1, 3, 6 of the season.
-    EWs boost stats, upgrade skills beyond level 30, and add 7.5% stat boost at level 20.
+Every season releases 3 EWs — one per hero type (Tank/Aircraft/Missile).
+Released in weeks 1, 3, 6 of the season.
+EWs boost stats, upgrade skills beyond level 30, and add 7.5% stat boost at level 20.
   `,
   release_schedule: {
     season_1: { week_1: 'Kimberly (Tank)', week_3: 'DVA (Aircraft)', week_6: 'Tesla (Missile)' },
@@ -210,23 +195,23 @@ export const EXCLUSIVE_WEAPONS = {
   },
   wall_of_honor: 'At level 30 max, excess shards go to Wall of Honor for small % stat boosts. Not a priority until all squad EWs are at L20+.',
   coaching_implication: `
-    If battle report shows hero skill damage dramatically lower than squad power suggests,
-    EW gap is the prime suspect. Ask: are your main squad heroes' EWs at level 20?
-    An opponent with EW L20+ has skills at level 36 vs your L30 — meaningful skill multiplier gap.
-    Priority: Get all 5 main squad heroes to EW L20 before pushing L30 on any single hero.
+If battle report shows hero skill damage dramatically lower than squad power suggests,
+EW gap is the prime suspect.
+Ask: are your main squad heroes' EWs at level 20?
+An opponent with EW L20+ has skills at level 36 vs your L30 — meaningful skill multiplier gap.
+Priority: Get all 5 main squad heroes to EW L20 before pushing L30 on any single hero.
   `,
 };
 
 // ─────────────────────────────────────────────────────────────
 // SECTION 6 — TACTICS CARDS (Season 4+)
 // ─────────────────────────────────────────────────────────────
-
 export const TACTICS_CARDS = {
   description: `
-    Introduced in Season 4. 3 types: Core Cards (permanent UR), Battle Cards, Resource Cards.
-    Deck slots: 2 Core + 4 Battle + 4 Resource.
-    Core Cards persist after season ends. Battle/Resource cards are removed at season end.
-    Core Card slot 1 requires Profession level 50+.
+Introduced in Season 4. 3 types: Core Cards (permanent UR), Battle Cards, Resource Cards.
+Deck slots: 2 Core + 4 Battle + 4 Resource.
+Core Cards persist after season ends. Battle/Resource cards are removed at season end.
+Core Card slot 1 requires Profession level 50+.
   `,
   pvp_core_cards: [
     {
@@ -293,176 +278,109 @@ export const TACTICS_CARDS = {
     },
   ],
   coaching_implication: `
-    Tactics Cards are INVISIBLE in battle reports. They explain gaps that pure power analysis cannot.
-    Key questions to ask after analyzing a report:
-    1. Did attacker have Warmind Morale Boost stacked? (serial attacker in kill event)
-    2. Did defender have Buluwark stacks? (hard garrison defense)
-    3. Did loser have Damage Reduction Reversal? (type mismatch but cards partially compensated)
-    4. Is the attacker running Efficient Unity? (4-hero mono + Murphy with +20% instead of +15%)
-    Always collect tactics card status in the pre-analysis intake.
+Tactics Cards are INVISIBLE in battle reports. They explain gaps that pure power analysis cannot.
+Key questions to ask after analyzing a report:
+1. Did attacker have Warmind Morale Boost stacked? (serial attacker in kill event)
+2. Did defender have Buluwark stacks? (hard garrison defense)
+3. Did loser have Damage Reduction Reversal? (type mismatch but cards partially compensated)
+4. Is the attacker running Efficient Unity? (4-hero mono + Murphy with +20% instead of +15%)
+Always collect tactics card status in the pre-analysis intake.
   `,
 };
 
 // ─────────────────────────────────────────────────────────────
 // SECTION 7 — DECORATIONS
 // ─────────────────────────────────────────────────────────────
-
 export const DECORATIONS = {
   description: `
-    Passive bonuses active at all times across ALL squads and ALL game modes.
-    No activation required. Stack additively. Show up in the stat comparison screen.
-    Tiers: UR (gold) > SSR (purple, single stat) > SR (blue, weakest).
-    Only invest in UR decorations. SR/SSR are early-game only.
-    UR decorations get a major bonus jump at Level 3 — spread all to L3 before going deeper.
+Passive bonuses active at all times across ALL squads and ALL game modes.
+No activation required. Stack additively.
+Show up in the stat comparison screen.
+Tiers: UR (gold) > SSR (purple, single stat) > SR (blue, weakest).
+Only invest in UR decorations. SR/SSR are early-game only.
+UR decorations get a major bonus jump at Level 3 — spread all to L3 before going deeper.
   `,
   stat_types: [
-    'Hero HP',
-    'Hero ATK',
-    'Hero DEF',
-    'Critical Damage %',
-    'Skill Damage %',
-    'Construction Speed %',
-    'March Size (rare — God of Judgment only)',
-    'Zombie Damage % (PvE only)',
+    'Hero HP', 'Hero ATK', 'Hero DEF', 'Critical Damage %', 'Skill Damage %',
+    'Construction Speed %', 'March Size (rare — God of Judgment only)', 'Zombie Damage % (PvE only)',
   ],
   top_ur_decorations: [
-    {
-      name: 'God of Judgment',
-      stats: 'HP + ATK + DEF + March Size (only march size source from decos)',
-      priority: 'S-Tier — best all-around, get this first',
-      note: 'Cannot be upgraded with Universal Decor Components. Harder to max.',
-    },
-    {
-      name: 'Tower of Victory',
-      stats: 'ATK + Critical Damage %',
-      priority: 'S-Tier — offensive. Second priority after God of Judgment.',
-    },
-    {
-      name: 'Eternal Pyramid',
-      stats: '+55% Construction Speed',
-      priority: 'A-Tier for progression speed. Not combat, but accelerates all building.',
-    },
-    {
-      name: 'Pumpkin Panic',
-      stats: '+90K HP, +2,142 ATK, +428 DEF, +5% Crit Damage',
-      priority: 'A-Tier — multi-stat with crit.',
-    },
-    {
-      name: 'Eiffel Tower',
-      stats: '+120K HP, +285 DEF',
-      priority: 'A-Tier — HP/survivability focus.',
-    },
-    {
-      name: 'Gold Missile Vehicle',
-      stats: '+4,285 ATK at Level 7 (highest single-stat ATK from vehicle decos)',
-      priority: 'A-Tier for attack-focused builds.',
-    },
-    {
-      name: 'Gold Tank',
-      stats: '+82,500 HP',
-      priority: 'B-Tier — HP only but solid if you have it.',
-    },
-    {
-      name: 'Cheese Manor',
-      stats: 'Large HP + 5% Critical Damage',
-      priority: 'A-Tier — HP + crit combo.',
-    },
-    {
-      name: 'Throne of Blood',
-      stats: '+55K HP, +ATK, +DEF (3-stat)',
-      priority: 'B-Tier — versatile 3-stat.',
-    },
-    {
-      name: 'Military Monument',
-      stats: '+1,300 DEF (highest DEF single-stat), +2% Zombie Damage',
-      priority: 'B-Tier — defense-focused or PvE farming.',
-    },
+    { name: 'God of Judgment', stats: 'HP + ATK + DEF + March Size (only march size source from decos)', priority: 'S-Tier — best all-around, get this first', note: 'Cannot be upgraded with Universal Decor Components. Harder to max.' },
+    { name: 'Tower of Victory', stats: 'ATK + Critical Damage %', priority: 'S-Tier — offensive. Second priority after God of Judgment.' },
+    { name: 'Eternal Pyramid', stats: '+55% Construction Speed', priority: 'A-Tier for progression speed. Not combat, but accelerates all building.' },
+    { name: 'Pumpkin Panic', stats: '+90K HP, +2,142 ATK, +428 DEF, +5% Crit Damage', priority: 'A-Tier — multi-stat with crit.' },
+    { name: 'Eiffel Tower', stats: '+120K HP, +285 DEF', priority: 'A-Tier — HP/survivability focus.' },
+    { name: 'Gold Missile Vehicle', stats: '+4,285 ATK at Level 7 (highest single-stat ATK from vehicle decos)', priority: 'A-Tier for attack-focused builds.' },
+    { name: 'Gold Tank', stats: '+82,500 HP', priority: 'B-Tier — HP only but solid if you have it.' },
+    { name: 'Cheese Manor', stats: 'Large HP + 5% Critical Damage', priority: 'A-Tier — HP + crit combo.' },
+    { name: 'Throne of Blood', stats: '+55K HP, +ATK, +DEF (3-stat)', priority: 'B-Tier — versatile 3-stat.' },
+    { name: 'Military Monument', stats: '+1,300 DEF (highest DEF single-stat), +2% Zombie Damage', priority: 'B-Tier — defense-focused or PvE farming.' },
   ],
   upgrade_strategy: `
-    1. Spread ALL UR decorations to Level 3 first (big jump at L3 special bonus).
-    2. Then prioritize L4 on your top 2-3 combat decos.
-    3. God of Judgment and Tower of Victory are first and second targets.
-    4. Use Universal Decor Components only on UR decorations.
-    5. January 2026 meta: Damage Reduction > Skill Damage > Crit Damage.
+1. Spread ALL UR decorations to Level 3 first (big jump at L3 special bonus).
+2. Then prioritize L4 on your top 2-3 combat decos.
+3. God of Judgment and Tower of Victory are first and second targets.
+4. Use Universal Decor Components only on UR decorations.
+5. January 2026 meta: Damage Reduction > Skill Damage > Crit Damage.
   `,
   coaching_implication: `
-    The stat comparison screen (red/green arrows) is where deco gap shows up.
-    If your ATK and HP both have red arrows against an opponent with similar
-    displayed power, deco gap is the most likely explanation.
-    A player with God of Judgment + Tower of Victory + Pumpkin Panic at L5+
-    has ~300K+ more HP and ~6K+ more ATK than a player with basic decos.
-    This shows as a crushing stat disadvantage on the comparison screen.
-    Coaching: "Your stat gap isn't a hero issue — it's a decoration investment gap.
-    Tower of Victory is your next upgrade target."
+The stat comparison screen (red/green arrows) is where deco gap shows up.
+If your ATK and HP both have red arrows against an opponent with similar displayed power,
+deco gap is the most likely explanation.
+A player with God of Judgment + Tower of Victory + Pumpkin Panic at L5+ has ~300K+ more HP
+and ~6K+ more ATK than a player with basic decos.
+This shows as a crushing stat disadvantage on the comparison screen.
+Coaching: "Your stat gap isn't a hero issue — it's a decoration investment gap.
+Tower of Victory is your next upgrade target."
   `,
 };
 
 // ─────────────────────────────────────────────────────────────
 // SECTION 8 — TROOP LOSS INTERPRETATION
 // ─────────────────────────────────────────────────────────────
-
 export const TROOP_LOSS_INTERPRETATION = {
   categories: {
-    lightly_wounded: {
-      label: 'Lightly Wounded',
-      meaning: 'Auto-recover. No hospital. No resources needed. Essentially free.',
-      severity: 'LOW',
-    },
-    wounded: {
-      label: 'Wounded (Hospital)',
-      meaning: 'Go to hospital. Require resources to heal. Recoverable.',
-      severity: 'MEDIUM',
-    },
-    killed: {
-      label: 'Killed / Dead',
-      meaning: 'Permanently lost UNLESS hospital overflow goes to Enlistment Office. True kills are gone forever.',
-      severity: 'HIGH',
-    },
-    enlistment: {
-      label: 'Enlistment Office',
-      meaning: 'Overflow from full hospital. Can be recalled at no resource cost (timed). Strategic storage.',
-      severity: 'MEDIUM — recoverable',
-    },
+    lightly_wounded: { label: 'Lightly Wounded', meaning: 'Auto-recover. No hospital. No resources needed. Essentially free.', severity: 'LOW' },
+    wounded: { label: 'Wounded (Hospital)', meaning: 'Go to hospital. Require resources to heal. Recoverable.', severity: 'MEDIUM' },
+    killed: { label: 'Killed / Dead', meaning: 'Permanently lost UNLESS hospital overflow goes to Enlistment Office. True kills are gone forever.', severity: 'HIGH' },
+    enlistment: { label: 'Enlistment Office', meaning: 'Overflow from full hospital. Can be recalled at no resource cost (timed). Strategic storage.', severity: 'MEDIUM — recoverable' },
   },
   hospital_overflow_rule: `
-    CRITICAL: When hospital is full, subsequent wounded go to Enlistment Office.
-    But if BOTH hospital AND enlistment are full → troops die permanently.
-    High kill count in a report = hospital was full. This is permanent loss.
-    Coaching implication: "Your kill count is high. Either your hospital was full 
-    during this fight, or you were significantly outmatched. Check hospital capacity
-    and ensure it's upgraded to your HQ level."
+CRITICAL: When hospital is full, subsequent wounded go to Enlistment Office.
+But if BOTH hospital AND enlistment are full → troops die permanently.
+High kill count in a report = hospital was full.
+This is permanent loss.
+Coaching implication: "Your kill count is high. Either your hospital was full during this fight,
+or you were significantly outmatched. Check hospital capacity and ensure it's upgraded to your HQ level."
   `,
   attacker_vs_defender_asymmetry: `
-    DEFENDERS get an advantage: killed troops go partially to Enlistment Office for recovery.
-    ATTACKERS keep their lightly wounded from successful attacks.
-    A loss for the attacker with high kill count = bad. 
-    A loss for the defender with high kill count = survivable if enlistment has capacity.
+DEFENDERS get an advantage: killed troops go partially to Enlistment Office for recovery.
+ATTACKERS keep their lightly wounded from successful attacks.
+A loss for the attacker with high kill count = bad.
+A loss for the defender with high kill count = survivable if enlistment has capacity.
   `,
   troop_damage_percentage: `
-    The per-troop-type damage % is the clearest indicator of what happened:
-    - Your type at 100% damage, theirs at 0% = pure type counter wipe
-    - Both sides at ~50% = even fight, other factors decided it
-    - Your type at 100%, theirs at 30-50% = type counter + power gap
-    - Your type at 30%, theirs at 100% = you won but took real losses
+The per-troop-type damage % is the clearest indicator of what happened:
+- Your type at 100% damage, theirs at 0% = pure type counter wipe
+- Both sides at ~50% = even fight, other factors decided it
+- Your type at 100%, theirs at 30-50% = type counter + power gap
+- Your type at 30%, theirs at 100% = you won but took real losses
   `,
 };
 
 // ─────────────────────────────────────────────────────────────
 // SECTION 9 — PvE REPORT LOGIC (Monster / Zombie)
 // ─────────────────────────────────────────────────────────────
-
 export const PVE_REPORT_LOGIC = {
   report_types: {
     zombie_world_map: {
-      name: 'World Map Zombie Kill',
-      stamina_cost: 10,
+      name: 'World Map Zombie Kill', stamina_cost: 10,
       shows: ['Hero skill damage', 'Resources earned', 'Courage medals', 'Troop losses (if any)'],
       no_show: ['Opponent stat comparison', 'Troop type breakdown vs enemy'],
       proper_squad: 'Should take ZERO troop losses on normal world map zombies with correct squad.',
     },
     zombie_boss: {
-      name: 'Zombie Boss / Doom Walker',
-      stamina_cost: 20,
+      name: 'Zombie Boss / Doom Walker', stamina_cost: 20,
       shows: ['Damage dealt per hero', 'Troop losses', 'Rewards'],
       note: 'Requires rally with alliance for high-level bosses.',
     },
@@ -487,38 +405,36 @@ export const PVE_REPORT_LOGIC = {
     'Mixed troop type formation in Zombie Siege — need all three types for wave coverage',
   ],
   pve_coaching_template: `
-    PvE reports should show zero or near-zero troop losses for world map zombies.
-    If losses are occurring on basic zombies: check squad composition, hero levels, 
-    and ensure Purgator – Monster Slayer card is active if in Season 1.
-    If Zombie Siege losses are high: check wave readiness, hero AoE coverage, 
-    and whether alliance reinforcements are being used.
+PvE reports should show zero or near-zero troop losses for world map zombies.
+If losses are occurring on basic zombies: check squad composition, hero levels,
+and ensure Purgator – Monster Slayer card is active if in Season 1.
+If Zombie Siege losses are high: check wave readiness, hero AoE coverage,
+and whether alliance reinforcements are being used.
   `,
 };
 
 // ─────────────────────────────────────────────────────────────
 // SECTION 10 — BATTLE REPORT SCREEN LAYOUT
 // ─────────────────────────────────────────────────────────────
-
 export const BATTLE_REPORT_SCREENS = {
   description: 'Last War battle reports are multi-tab. Each tab reveals different data.',
   screens: [
     {
-      screen: 1,
-      name: 'Outcome + Power Summary',
+      screen: 1, name: 'Outcome + Power Summary',
       visible_data: [
         'Win / Loss outcome',
-        'Attacker power (displayed)',
-        'Defender power (displayed)',
+        'Attacker name and power (displayed)',
+        'Defender name and power (displayed)',
         'Power lost from battle (each side)',
         'Hero lineup used (both sides, small icons)',
         'Loot stolen (if win)',
         'Battle timestamp and coordinates',
+        'OPPONENT NAME — visible as the other player\'s name on this screen',
       ],
-      analysis_use: 'Power differential, outcome, which heroes were deployed.',
+      analysis_use: 'Power differential, outcome, opponent name, which heroes were deployed.',
     },
     {
-      screen: 2,
-      name: 'Troop Loss Breakdown',
+      screen: 2, name: 'Troop Loss Breakdown',
       visible_data: [
         'Total troops sent vs total troops defending',
         'Killed / Wounded / Lightly Wounded / Survived — both sides',
@@ -528,8 +444,7 @@ export const BATTLE_REPORT_SCREENS = {
       analysis_use: 'THE MOST IMPORTANT SCREEN. Type matchup diagnosis. Morale cascade evidence.',
     },
     {
-      screen: 3,
-      name: 'Hero Skill Damage',
+      screen: 3, name: 'Hero Skill Damage',
       visible_data: [
         'Damage dealt by each hero skill',
         'Kills attributed to each skill',
@@ -538,8 +453,7 @@ export const BATTLE_REPORT_SCREENS = {
       analysis_use: 'EW gap diagnosis. Hero investment gap. Skill level comparison.',
     },
     {
-      screen: 4,
-      name: 'Stat Comparison',
+      screen: 4, name: 'Stat Comparison',
       visible_data: [
         'ATK, HP, DEF, Lethality — both players',
         'Green arrow = your stat higher, Red arrow = theirs higher',
@@ -548,8 +462,7 @@ export const BATTLE_REPORT_SCREENS = {
       analysis_use: 'Decoration gap, research gap, gear gap. If power is equal but stats are red = deco/gear.',
     },
     {
-      screen: 5,
-      name: 'Gear / Chief Level',
+      screen: 5, name: 'Gear / Chief Level',
       visible_data: [
         "Each player's Chief Level",
         'Gear equipped per slot (helmet, chest, boots, weapon, badge)',
@@ -558,8 +471,7 @@ export const BATTLE_REPORT_SCREENS = {
       analysis_use: 'Gear tier comparison. Badge investment gap.',
     },
     {
-      screen: 6,
-      name: 'Power Up Analysis',
+      screen: 6, name: 'Power Up Analysis',
       visible_data: [
         'Letter-grade (S/A/B/C) breakdown of improvement areas',
         'Tap each grade for specific material recommendations',
@@ -568,18 +480,17 @@ export const BATTLE_REPORT_SCREENS = {
     },
   ],
   screenshot_guidance: `
-    For the best analysis, upload screenshots of ALL screens in order.
-    Minimum viable: Screen 1 (outcome) + Screen 2 (troop breakdown) + Screen 4 (stats).
-    Screen 3 (hero skills) adds EW/skill diagnosis.
-    Screen 5 (gear) adds gear gap diagnosis.
-    The more screens uploaded, the more precise the coaching.
+For the best analysis, upload screenshots of ALL screens in order.
+Minimum viable: Screen 1 (outcome) + Screen 2 (troop breakdown) + Screen 4 (stats).
+Screen 3 (hero skills) adds EW/skill diagnosis.
+Screen 5 (gear) adds gear gap diagnosis.
+The more screens uploaded, the more precise the coaching.
   `,
 };
 
 // ─────────────────────────────────────────────────────────────
 // SECTION 11 — VERDICT TEMPLATES
 // ─────────────────────────────────────────────────────────────
-
 export const VERDICT_TEMPLATES = {
   countered_type_mismatch: {
     label: 'Countered — Troop Type Mismatch',
@@ -640,7 +551,6 @@ export const VERDICT_TEMPLATES = {
 // ─────────────────────────────────────────────────────────────
 // SECTION 12 — COACHING ACTION TEMPLATES
 // ─────────────────────────────────────────────────────────────
-
 export const COACHING_ACTIONS = {
   type_counter_fix: [
     'Before attacking: tap the enemy base → check their squad type icons.',
@@ -687,11 +597,7 @@ export const COACHING_ACTIONS = {
 
 // ─────────────────────────────────────────────────────────────
 // SECTION 13 — PRE-ANALYSIS INTAKE QUESTIONS (updated)
-// - report_type moved to Q1 so card list can filter by PvP vs PvE
-// - tactics_cards is now multi-select string[] grouped by card type
-// - deco_level removed — visible directly in Stat Comparison screen
 // ─────────────────────────────────────────────────────────────
-
 export const INTAKE_QUESTIONS = {
   purpose: 'Capture invisible variables that don\'t show in screenshots.',
   questions: [
@@ -713,31 +619,13 @@ export const INTAKE_QUESTIONS = {
       type: 'multi-select',
       why: 'Tactics cards are completely invisible in battle reports. Efficient Unity changes formation math. Warmind Morale Boost explains asymmetric losses. Purgator explains PvE virus resistance outcomes.',
       options_pvp: {
-        'Core Cards — Attacker': [
-          'Warmind – Rapid Rescue',
-          'Warmind – Morale Boost',
-          'Windrusher – Morale Boost',
-          'Windrusher – Rapid Rescue',
-        ],
-        'Core Cards — Defender': [
-          'Buluwark – Comprehensive Enhancement',
-          'Buluwark – Morale Boost',
-        ],
-        'Battle Cards': [
-          'Efficient Unity',
-          'Damage Reduction Reversal',
-          'Damage Reversal',
-          'Attribute Aura',
-          'Warmind – One Against Ten',
-        ],
+        'Core Cards — Attacker': ['Warmind – Rapid Rescue', 'Warmind – Morale Boost', 'Windrusher – Morale Boost', 'Windrusher – Rapid Rescue'],
+        'Core Cards — Defender': ['Buluwark – Comprehensive Enhancement', 'Buluwark – Morale Boost'],
+        'Battle Cards': ['Efficient Unity', 'Damage Reduction Reversal', 'Damage Reversal', 'Attribute Aura', 'Warmind – One Against Ten'],
       },
       options_pve: {
-        'PvE Cards': [
-          'Purgator – Monster Slayer',
-        ],
-        'Battle Cards': [
-          'Attribute Aura',
-        ],
+        'PvE Cards': ['Purgator – Monster Slayer'],
+        'Battle Cards': ['Attribute Aura'],
       },
     },
   ],
@@ -745,11 +633,7 @@ export const INTAKE_QUESTIONS = {
 
 // ─────────────────────────────────────────────────────────────
 // SECTION 14 — SYSTEM PROMPT BUILDER (for battle-report/route.ts)
-// intake.tactics_cards is now string[] — serialized as comma list
-// intake.report_type moved to first position
-// intake.deco_level removed — read from screenshots instead
 // ─────────────────────────────────────────────────────────────
-
 export function buildBattleReportSystemPrompt(
   playerProfile: {
     hq_level?: number;
@@ -764,18 +648,17 @@ export function buildBattleReportSystemPrompt(
   intake: {
     report_type: string;
     squad_type: string;
-    tactics_cards: string[]; // multi-select array
+    tactics_cards: string[];
   }
 ): string {
-  const isPvE = intake.report_type.toLowerCase().includes('pve') ||
+  const isPvE =
+    intake.report_type.toLowerCase().includes('pve') ||
     intake.report_type.toLowerCase().includes('zombie') ||
     intake.report_type.toLowerCase().includes('monster');
 
-  const tacticsCardsSummary = intake.tactics_cards.length > 0
-    ? intake.tactics_cards.join(', ')
-    : 'None reported';
+  const tacticsCardsSummary =
+    intake.tactics_cards.length > 0 ? intake.tactics_cards.join(', ') : 'None reported';
 
-  // Derive specific card flags for targeted prompt instructions
   const hasEfficientUnity = intake.tactics_cards.includes('Efficient Unity');
   const hasWarmindMorale = intake.tactics_cards.includes('Warmind – Morale Boost');
   const hasWindrusherMorale = intake.tactics_cards.includes('Windrusher – Morale Boost');
@@ -791,18 +674,18 @@ export function buildBattleReportSystemPrompt(
 
   const cardFlags = [
     hasEfficientUnity ? '- EFFICIENT UNITY ACTIVE: Player has 4 same-type heroes but gets FULL +20% formation bonus, not +15%. Do NOT flag a formation issue if they have a 4+1 lineup.' : '',
-    hasWarmindMorale ? '- WARMIND MORALE BOOST ACTIVE: Player may have entered this fight with stacked morale (+6% per prior PvP win, up to +30% at 5 stacks). Factor into damage advantage analysis. Serial attackers in kill events often arrive at max stacks.' : '',
+    hasWarmindMorale ? '- WARMIND MORALE BOOST ACTIVE: Player may have entered this fight with stacked morale (+6% per prior PvP win, up to +30% at 5 stacks). Factor into damage advantage analysis.' : '',
     hasWindrusherMorale ? '- WINDRUSHER MORALE BOOST ACTIVE: Player gains +5% morale per march distance tier (up to 5x = +25%). Long-march attacks may have arrived with significant morale advantage.' : '',
     hasWarmindRapidRescue ? '- WARMIND RAPID RESCUE ACTIVE: Player recovers up to 100% lightly wounded troops after winning PvP (2x daily). Lightly wounded numbers in report may understate actual attrition.' : '',
-    hasWindrusherRapidRescue ? '- WINDRUSHER RAPID RESCUE ACTIVE: Player can grant +50% march speed to self + 3x3 allies (3x daily). Relevant for rally timing and reinforcement windows.' : '',
+    hasWindrusherRapidRescue ? '- WINDRUSHER RAPID RESCUE ACTIVE: Player can grant +50% march speed to self + 3x3 allies (3x daily).' : '',
     hasBuluwarkComp ? '- BULUWARK COMPREHENSIVE ENHANCEMENT ACTIVE: Player in defense gets +10% HP/ATK/DEF base + up to +24% more at max stacks (2x daily). Explains harder-than-expected garrison defense.' : '',
     hasBuluwarkMorale ? '- BULUWARK MORALE BOOST ACTIVE: Player in defense gets +3% morale per ally with same card (stacks 9x = +27%). Alliance defense coordination with this card = substantial morale wall.' : '',
-    hasDamageReductionReversal ? '- DAMAGE REDUCTION REVERSAL ACTIVE: Player takes up to 5.10% less damage when at a type disadvantage. Partially offsets the -20% type counter penalty — losses may have been slightly less severe than raw counter math suggests.' : '',
-    hasDamageReversal ? '- DAMAGE REVERSAL ACTIVE: Player deals up to 2.55% more damage when countered. Stacked with Damage Reduction Reversal = partially nullifies type counter disadvantage.' : '',
-    hasAttributeAura ? '- ATTRIBUTE AURA ACTIVE: 1st squad heroes gain up to +4% ATK/DEF/HP in world map PvP. Small but real flat stat boost.' : '',
-    hasWarmindOneAgainstTen ? '- WARMIND ONE AGAINST TEN ACTIVE: Attribute penalties from marching with reduced march size reduced by up to 30%. Player may have marched understrength with less penalty than expected.' : '',
-    hasPurgator ? '- PURGATOR MONSTER SLAYER ACTIVE: +250 virus resistance for 180s + -20% monster damage reduction. PvE performance should reflect this advantage. If damage was still near-zero, VRI research may still be insufficient.' : '',
-    intake.tactics_cards.length === 0 ? '- NO TACTICS CARDS REPORTED: Player either has none equipped or is unsure. Do not assume any card effects. Note in coaching that equipping relevant cards (especially Efficient Unity for formation, Warmind Morale Boost for kill events) is a free power gain.' : '',
+    hasDamageReductionReversal ? '- DAMAGE REDUCTION REVERSAL ACTIVE: Player takes up to 5.10% less damage when at a type disadvantage.' : '',
+    hasDamageReversal ? '- DAMAGE REVERSAL ACTIVE: Player deals up to 2.55% more damage when countered.' : '',
+    hasAttributeAura ? '- ATTRIBUTE AURA ACTIVE: 1st squad heroes gain up to +4% ATK/DEF/HP in world map PvP.' : '',
+    hasWarmindOneAgainstTen ? '- WARMIND ONE AGAINST TEN ACTIVE: Attribute penalties from marching with reduced march size reduced by up to 30%.' : '',
+    hasPurgator ? '- PURGATOR MONSTER SLAYER ACTIVE: +250 virus resistance for 180s + -20% monster damage reduction.' : '',
+    intake.tactics_cards.length === 0 ? '- NO TACTICS CARDS REPORTED: Player either has none equipped or is unsure. Do not assume any card effects. Note in coaching that equipping relevant cards is a free power gain.' : '',
   ].filter(Boolean).join('\n');
 
   return `You are the Last War: Survival Battle Report Analyzer — an expert AI combat coach embedded in Last War: Survival Buddy (LastWarSurvivalBuddy.com).
@@ -864,14 +747,21 @@ ${cardFlags}
 - Killed: PERMANENT if hospital + enlistment both full
 - High kill count = hospital was full during fight
 
-## YOUR OUTPUT FORMAT
+### OPPONENT IDENTIFICATION (Screen 1)
+- The opponent's name is visible on Screen 1 (Outcome + Power Summary) as the other player's name
+- The opponent's displayed power is visible on Screen 1
+- ALWAYS extract opponent_name from the screenshots. If not legible, use "Unknown"
+- ALWAYS extract opponent_power from the screenshots. If not legible, use "not visible"
 
+## YOUR OUTPUT FORMAT
 Respond ONLY with a JSON object. No markdown, no preamble. Structure:
 
 {
   "outcome": "Win" | "Loss" | "Pyrrhic Win",
   "report_type": "PvP Solo" | "PvP Rally" | "PvE Zombie" | "PvE Boss",
   "verdict": "Short verdict label (e.g. 'Countered — Type Mismatch')",
+  "opponent_name": "The opponent's in-game name from Screen 1, or 'Unknown' if not legible",
+  "opponent_power": "The opponent's displayed power from Screen 1, e.g. '42.3M' or 'not visible'",
   "power_differential": {
     "attacker_power": "e.g. 47.2M or 'not visible'",
     "defender_power": "e.g. 51.8M or 'not visible'",
@@ -910,12 +800,13 @@ Respond ONLY with a JSON object. No markdown, no preamble. Structure:
   "coaching": ["Array of 3-5 specific actionable coaching items"],
   "rematch_verdict": "Yes — conditions met" | "Not yet — see coaching" | "No — power gap too large" | "N/A — you won",
   "rematch_reasoning": "One sentence on rematch recommendation",
-  "invisible_factors_note": "Note on tactics cards reported and how they affected this outcome. If no cards were reported, mention that equipping relevant cards (Efficient Unity, Warmind Morale Boost) is a free power gain worth investigating."
+  "invisible_factors_note": "Note on tactics cards reported and how they affected this outcome."
 }
 
 ## RULES
 - Read ALL screenshots as a set. Earlier screens may have data that later screens need.
 - If a data field is not visible in any screenshot, use "not visible" — NEVER fabricate numbers.
+- ALWAYS attempt to read opponent_name and opponent_power from Screen 1. This is the most important new field.
 - Base your counter diagnosis on the troop type breakdown screen, not assumptions.
 - If report type is PvE, ignore PvP counter system and use PvE diagnostic path.
 - Apply Efficient Unity formation correction if that flag is active above.
@@ -929,7 +820,6 @@ Respond ONLY with a JSON object. No markdown, no preamble. Structure:
 // ─────────────────────────────────────────────────────────────
 // SECTION 15 — QUOTA LIMITS
 // ─────────────────────────────────────────────────────────────
-
 export const BATTLE_REPORT_QUOTAS = {
   free: {
     daily_limit: 0,
@@ -961,12 +851,12 @@ export const BATTLE_REPORT_QUOTAS = {
     margin_usd: 13.54,
   },
   founding: {
-    daily_limit: 10, // soft cap, displayed as "Unlimited"
+    daily_limit: 10,
     displayed_as: 'Unlimited',
     gate: 'soft_invisible',
     cost_per_report_usd: 0.043,
-    monthly_max_cost_usd: 12.90, // at full 10/day
-    monthly_revenue_equiv_usd: 2.06, // $99 spread over 48 months
+    monthly_max_cost_usd: 12.90,
+    monthly_revenue_equiv_usd: 2.06,
     note: 'Accept the cost. Founding Members are your advocates. Soft cap at 10/day is invisible.',
   },
 };
@@ -974,7 +864,6 @@ export const BATTLE_REPORT_QUOTAS = {
 // ─────────────────────────────────────────────────────────────
 // EXPORT SUMMARY
 // ─────────────────────────────────────────────────────────────
-
 export function getBattleReportKnowledgeSummary(): string {
   return `
 BATTLE REPORT ANALYZER KNOWLEDGE BASE
@@ -989,6 +878,7 @@ Decorations: Read from Screen 4 red/green arrows. God of Judgment + Tower of Vic
 Troop Losses: High killed = hospital full = permanent loss.
 PvE: Virus resistance gate in Season 1. Purgator card required. AoE heroes for Zombie Siege.
 Screens: 6 screens per report. Screen 2 (troop breakdown) is most critical.
+Opponent: Name and power extracted from Screen 1. Stored as opponent_name / opponent_power.
 Quotas: Free=0, Pro=3/day, Elite=5/day, Founding=10/day (shown as unlimited).
   `.trim();
 }

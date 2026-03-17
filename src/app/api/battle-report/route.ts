@@ -5,7 +5,6 @@ import { buildBattleReportSystemPrompt, BATTLE_REPORT_QUOTAS } from '@/lib/lwtBa
 // ─────────────────────────────────────────────────────────────
 // TYPES
 // ─────────────────────────────────────────────────────────────
-
 interface IntakeAnswers {
   report_type: string;
   squad_type: string;
@@ -44,15 +43,14 @@ interface DailyUsageRow {
 // ─────────────────────────────────────────────────────────────
 // TIER LIMIT HELPER
 // ─────────────────────────────────────────────────────────────
-
 function getDailyLimit(tier: string): number {
   switch (tier) {
-    case 'pro':       return BATTLE_REPORT_QUOTAS.pro.daily_limit;
-    case 'elite':     return BATTLE_REPORT_QUOTAS.elite.daily_limit;
-    case 'alliance':  return BATTLE_REPORT_QUOTAS.alliance.daily_limit;
-    case 'founding':  return BATTLE_REPORT_QUOTAS.founding.daily_limit; // soft cap — displayed as unlimited
+    case 'pro':      return BATTLE_REPORT_QUOTAS.pro.daily_limit;
+    case 'elite':    return BATTLE_REPORT_QUOTAS.elite.daily_limit;
+    case 'alliance': return BATTLE_REPORT_QUOTAS.alliance.daily_limit;
+    case 'founding': return BATTLE_REPORT_QUOTAS.founding.daily_limit; // soft cap
     case 'free':
-    default:          return BATTLE_REPORT_QUOTAS.free.daily_limit;
+    default:         return BATTLE_REPORT_QUOTAS.free.daily_limit;
   }
 }
 
@@ -65,7 +63,6 @@ function getDisplayLimit(tier: string): string {
 // ─────────────────────────────────────────────────────────────
 // DATE HELPER (UTC — matches rest of app)
 // ─────────────────────────────────────────────────────────────
-
 function getUTCDateString(): string {
   return new Date().toISOString().split('T')[0];
 }
@@ -73,7 +70,6 @@ function getUTCDateString(): string {
 // ─────────────────────────────────────────────────────────────
 // MAIN HANDLER
 // ─────────────────────────────────────────────────────────────
-
 export async function POST(req: NextRequest) {
   try {
     // ── 1. Auth ──────────────────────────────────────────────
@@ -111,7 +107,6 @@ export async function POST(req: NextRequest) {
     const tier = subData?.tier ?? 'free';
     const dailyLimit = getDailyLimit(tier);
 
-    // Free tier — hard gate
     if (dailyLimit === 0) {
       return NextResponse.json({
         error: 'upgrade_required',
@@ -122,7 +117,6 @@ export async function POST(req: NextRequest) {
 
     // ── 4. Daily quota check ──────────────────────────────────
     const today = getUTCDateString();
-
     const { data: usageData } = await supabase
       .from('daily_usage')
       .select('battle_report_count')
@@ -131,7 +125,6 @@ export async function POST(req: NextRequest) {
       .single() as { data: DailyUsageRow | null };
 
     const currentCount = usageData?.battle_report_count ?? 0;
-
     if (currentCount >= dailyLimit) {
       return NextResponse.json({
         error: 'quota_exceeded',
@@ -141,7 +134,7 @@ export async function POST(req: NextRequest) {
         current: currentCount,
         limit: dailyLimit,
         display_limit: getDisplayLimit(tier),
-        resets_at: `${today}T00:00:00Z`, // next midnight UTC
+        resets_at: `${today}T00:00:00Z`,
       }, { status: 429 });
     }
 
@@ -153,13 +146,13 @@ export async function POST(req: NextRequest) {
       .single() as { data: ProfileRow | null };
 
     const playerProfile = {
-      hq_level: profileData?.hq_level ?? undefined,
-      troop_type: profileData?.troop_type ?? undefined,
-      troop_tier: profileData?.troop_tier ?? undefined,
-      squad_power: profileData?.squad_power ?? undefined,
-      server_day: profileData?.server_day ?? undefined,
-      spend_style: profileData?.spend_style ?? undefined,
-      hero_power: profileData?.hero_power ?? undefined,
+      hq_level:     profileData?.hq_level     ?? undefined,
+      troop_type:   profileData?.troop_type   ?? undefined,
+      troop_tier:   profileData?.troop_tier   ?? undefined,
+      squad_power:  profileData?.squad_power  ?? undefined,
+      server_day:   profileData?.server_day   ?? undefined,
+      spend_style:  profileData?.spend_style  ?? undefined,
+      hero_power:   profileData?.hero_power   ?? undefined,
       beginner_mode: profileData?.beginner_mode ?? false,
     };
 
@@ -167,7 +160,6 @@ export async function POST(req: NextRequest) {
     const systemPrompt = buildBattleReportSystemPrompt(playerProfile, intake);
 
     // ── 7. Build Claude Vision message content ────────────────
-    // Multiple images + text prompt, all in one user message
     type ContentBlock =
       | { type: 'image'; source: { type: 'base64'; media_type: string; data: string } }
       | { type: 'text'; text: string };
@@ -181,9 +173,8 @@ export async function POST(req: NextRequest) {
       },
     }));
 
-    const tacticsCardsSummary = intake.tactics_cards.length > 0
-      ? intake.tactics_cards.join(', ')
-      : 'None';
+    const tacticsCardsSummary =
+      intake.tactics_cards.length > 0 ? intake.tactics_cards.join(', ') : 'None';
 
     contentBlocks.push({
       type: 'text' as const,
@@ -194,7 +185,9 @@ Player confirmed:
 - Their squad type: ${intake.squad_type}
 - Tactics cards active: ${tacticsCardsSummary}
 
-Read ALL screenshots as a set. Return ONLY valid JSON matching the schema in your instructions. No markdown, no preamble, no explanation outside the JSON object.`,
+Read ALL screenshots as a set. Screen 1 (Outcome + Power Summary) contains the opponent's name and displayed power — extract these carefully.
+
+Return ONLY valid JSON matching the schema in your instructions. No markdown, no preamble, no explanation outside the JSON object.`,
     });
 
     // ── 8. Claude API call ────────────────────────────────────
@@ -214,12 +207,7 @@ Read ALL screenshots as a set. Return ONLY valid JSON matching the schema in you
         model: 'claude-sonnet-4-20250514',
         max_tokens: 2000,
         system: systemPrompt,
-        messages: [
-          {
-            role: 'user',
-            content: contentBlocks,
-          },
-        ],
+        messages: [{ role: 'user', content: contentBlocks }],
       }),
     });
 
@@ -239,7 +227,6 @@ Read ALL screenshots as a set. Return ONLY valid JSON matching the schema in you
     // ── 9. Parse structured JSON from Claude ──────────────────
     let analysis: Record<string, unknown>;
     try {
-      // Strip any accidental markdown fences
       const cleaned = rawText
         .replace(/^```json\s*/i, '')
         .replace(/^```\s*/i, '')
@@ -255,14 +242,12 @@ Read ALL screenshots as a set. Return ONLY valid JSON matching the schema in you
 
     // ── 10. Increment quota ───────────────────────────────────
     if (usageData) {
-      // Row exists — increment
       await supabase
         .from('daily_usage')
         .update({ battle_report_count: currentCount + 1 })
         .eq('user_id', user.id)
         .eq('date', today);
     } else {
-      // No row yet — insert with battle_report_count = 1
       await supabase
         .from('daily_usage')
         .upsert({
@@ -275,9 +260,12 @@ Read ALL screenshots as a set. Return ONLY valid JSON matching the schema in you
     }
 
     // ── 11. Save report to battle_reports table ───────────────
-    const outcome = (analysis.outcome as string) ?? 'Unknown';
-    const verdict = (analysis.verdict as string) ?? 'Analysis complete';
-    const reportType = (analysis.report_type as string) ?? intake.report_type;
+    // Extract opponent fields from analysis — these are new fields added to JSON schema
+    const outcome        = (analysis.outcome as string)        ?? 'Unknown';
+    const verdict        = (analysis.verdict as string)        ?? 'Analysis complete';
+    const reportType     = (analysis.report_type as string)    ?? intake.report_type;
+    const opponentName   = (analysis.opponent_name as string)  ?? 'Unknown';
+    const opponentPower  = (analysis.opponent_power as string) ?? 'not visible';
 
     await supabase
       .from('battle_reports')
@@ -288,7 +276,11 @@ Read ALL screenshots as a set. Return ONLY valid JSON matching the schema in you
         verdict,
         analysis,
         images_count: images.length,
-        intake_data: intake,
+        intake_data: {
+          ...intake,
+          opponent_name: opponentName,
+          opponent_power: opponentPower,
+        },
       });
 
     // ── 12. Return success ────────────────────────────────────
@@ -298,12 +290,12 @@ Read ALL screenshots as a set. Return ONLY valid JSON matching the schema in you
       meta: {
         images_analyzed: images.length,
         reports_used_today: currentCount + 1,
-        reports_remaining_today: tier === 'founding' ? 'unlimited' : Math.max(0, dailyLimit - (currentCount + 1)),
+        reports_remaining_today:
+          tier === 'founding' ? 'unlimited' : Math.max(0, dailyLimit - (currentCount + 1)),
         display_limit: getDisplayLimit(tier),
         tier,
       },
     });
-
   } catch (error) {
     console.error('Battle report route error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -313,7 +305,6 @@ Read ALL screenshots as a set. Return ONLY valid JSON matching the schema in you
 // ─────────────────────────────────────────────────────────────
 // GET — fetch user's recent battle reports (last 10)
 // ─────────────────────────────────────────────────────────────
-
 export async function GET(req: NextRequest) {
   try {
     const authHeader = req.headers.get('authorization');
@@ -326,9 +317,10 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Fetch last 10 reports — include intake_data so we can pull opponent fields
     const { data: reports, error } = await supabase
       .from('battle_reports')
-      .select('id, created_at, outcome, report_type, verdict, images_count')
+      .select('id, created_at, outcome, report_type, verdict, images_count, intake_data')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .limit(10);
@@ -336,6 +328,30 @@ export async function GET(req: NextRequest) {
     if (error) {
       return NextResponse.json({ error: 'Failed to fetch reports' }, { status: 500 });
     }
+
+    // Normalize reports — pull opponent_name and opponent_power out of intake_data
+    // so the component doesn't need to dig into jsonb
+    const normalizedReports = (reports ?? []).map((r: {
+      id: string;
+      created_at: string;
+      outcome: string;
+      report_type: string;
+      verdict: string;
+      images_count: number;
+      intake_data: Record<string, unknown> | null;
+    }) => {
+      const intakeData = (r.intake_data as Record<string, unknown>) ?? {};
+      return {
+        id: r.id,
+        created_at: r.created_at,
+        outcome: r.outcome,
+        report_type: r.report_type,
+        verdict: r.verdict,
+        images_count: r.images_count,
+        opponent_name:  (intakeData.opponent_name  as string) ?? 'Unknown',
+        opponent_power: (intakeData.opponent_power as string) ?? 'not visible',
+      };
+    });
 
     // Also return today's quota status
     const today = getUTCDateString();
@@ -357,7 +373,7 @@ export async function GET(req: NextRequest) {
     const usedToday = usageData?.battle_report_count ?? 0;
 
     return NextResponse.json({
-      reports: reports ?? [],
+      reports: normalizedReports,
       quota: {
         tier,
         used_today: usedToday,
@@ -367,7 +383,6 @@ export async function GET(req: NextRequest) {
         can_analyze: tier !== 'free' && usedToday < dailyLimit,
       },
     });
-
   } catch (error) {
     console.error('Battle report GET error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

@@ -7,11 +7,10 @@ import { supabase } from '@/lib/supabase';
 // ─────────────────────────────────────────────────────────────
 // TYPES
 // ─────────────────────────────────────────────────────────────
-
 interface IntakeAnswers {
   report_type: string;
   squad_type: string;
-  tactics_cards: string[]; // multi-select — empty array is valid (no cards active)
+  tactics_cards: string[]; // multi-select — empty array is valid
 }
 
 interface ImageFile {
@@ -26,6 +25,8 @@ interface AnalysisResult {
   outcome: string;
   report_type: string;
   verdict: string;
+  opponent_name: string;
+  opponent_power: string;
   power_differential: {
     attacker_power: string;
     defender_power: string;
@@ -82,6 +83,8 @@ interface HistoryReport {
   report_type: string;
   verdict: string;
   images_count: number;
+  opponent_name: string;
+  opponent_power: string;
 }
 
 interface BattleReportAnalyzerProps {
@@ -96,7 +99,6 @@ interface BattleReportAnalyzerProps {
 // ─────────────────────────────────────────────────────────────
 // CONSTANTS
 // ─────────────────────────────────────────────────────────────
-
 const REPORT_TYPE_OPTIONS = [
   'PvP — I attacked someone',
   'PvP — Someone attacked me',
@@ -106,7 +108,6 @@ const REPORT_TYPE_OPTIONS = [
 
 const SQUAD_TYPE_OPTIONS = ['Tank', 'Aircraft', 'Missile', 'Mixed'];
 
-// Tactics cards grouped — filtered based on report type selection
 const TACTICS_CARDS_PVP: Record<string, string[]> = {
   'Core Cards — Attacker': [
     'Warmind – Rapid Rescue',
@@ -128,12 +129,8 @@ const TACTICS_CARDS_PVP: Record<string, string[]> = {
 };
 
 const TACTICS_CARDS_PVE: Record<string, string[]> = {
-  'PvE Cards': [
-    'Purgator – Monster Slayer',
-  ],
-  'Battle Cards': [
-    'Attribute Aura',
-  ],
+  'PvE Cards': ['Purgator – Monster Slayer'],
+  'Battle Cards': ['Attribute Aura'],
 };
 
 const OUTCOME_COLOR: Record<string, string> = {
@@ -172,7 +169,6 @@ const REMATCH_COLOR: Record<string, string> = {
 // ─────────────────────────────────────────────────────────────
 // HELPER — file to base64
 // ─────────────────────────────────────────────────────────────
-
 async function fileToBase64(file: File): Promise<{ base64: string; mediaType: ImageFile['mediaType'] }> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -190,14 +186,12 @@ async function fileToBase64(file: File): Promise<{ base64: string; mediaType: Im
 // ─────────────────────────────────────────────────────────────
 // HELPER — format date
 // ─────────────────────────────────────────────────────────────
-
 function formatReportDate(isoString: string): string {
   const date = new Date(isoString);
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
   const diffHours = diffMs / (1000 * 60 * 60);
   const diffDays = diffMs / (1000 * 60 * 60 * 24);
-
   if (diffHours < 1) return 'Just now';
   if (diffHours < 24) return `${Math.floor(diffHours)}h ago`;
   if (diffDays < 2) return 'Yesterday';
@@ -225,7 +219,6 @@ function getCardGroups(reportType: string): Record<string, string[]> {
 // ─────────────────────────────────────────────────────────────
 // COMPONENT
 // ─────────────────────────────────────────────────────────────
-
 export default function BattleReportAnalyzer({
   isOpen,
   onClose,
@@ -264,8 +257,7 @@ export default function BattleReportAnalyzer({
   const isAtLimit = !isFounding && reportsUsedToday >= reportsLimitToday;
   const isLocked = isFree || isAtLimit;
 
-  // ── Intake complete — report_type and squad_type required.
-  //    tactics_cards can be empty (player had none active) — that is valid.
+  // ── Intake complete check ─────────────────────────────────
   const intakeComplete = intake.report_type !== '' && intake.squad_type !== '';
 
   // ── Fetch history ─────────────────────────────────────────
@@ -276,10 +268,12 @@ export default function BattleReportAnalyzer({
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.access_token) throw new Error('Not authenticated');
+
       const res = await fetch('/api/battle-report', {
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
       if (!res.ok) throw new Error('Failed to load history');
+
       const data = await res.json();
       setHistory(data.reports ?? []);
       setHistoryFetched(true);
@@ -290,13 +284,11 @@ export default function BattleReportAnalyzer({
     }
   }, [historyFetched]);
 
-  // Re-fetch history after a new analysis completes
   const handleReportComplete = useCallback(() => {
-    setHistoryFetched(false); // invalidate cache so next history view refetches
+    setHistoryFetched(false);
     onReportComplete?.();
   }, [onReportComplete]);
 
-  // Fetch history when tab switches to history
   useEffect(() => {
     if (activeTab === 'history' && !historyFetched) {
       fetchHistory();
@@ -305,14 +297,9 @@ export default function BattleReportAnalyzer({
 
   // ── Report type selection — clears cards when type changes ─
   const handleReportTypeSelect = (val: string) => {
-    setIntake(prev => ({
-      ...prev,
-      report_type: val,
-      tactics_cards: [], // PvP cards irrelevant for PvE and vice versa
-    }));
+    setIntake(prev => ({ ...prev, report_type: val, tactics_cards: [] }));
   };
 
-  // ── Toggle a tactics card in/out of selection ─────────────
   const toggleCard = (card: string) => {
     setIntake(prev => {
       const already = prev.tactics_cards.includes(card);
@@ -331,18 +318,11 @@ export default function BattleReportAnalyzer({
     const toAdd = files.slice(0, remaining);
     const imageTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
     const valid = toAdd.filter(f => imageTypes.includes(f.type));
-
     const newImages: ImageFile[] = await Promise.all(
       valid.map(async (file) => {
         const preview = URL.createObjectURL(file);
         const { base64, mediaType } = await fileToBase64(file);
-        return {
-          id: `${Date.now()}-${Math.random()}`,
-          file,
-          preview,
-          base64,
-          mediaType,
-        };
+        return { id: `${Date.now()}-${Math.random()}`, file, preview, base64, mediaType };
       })
     );
     setImages(prev => [...prev, ...newImages]);
@@ -353,16 +333,12 @@ export default function BattleReportAnalyzer({
   };
 
   // ── Drag and drop ─────────────────────────────────────────
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(true);
-  };
+  const handleDragOver = (e: React.DragEvent) => { e.preventDefault(); setIsDragging(true); };
   const handleDragLeave = () => setIsDragging(false);
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
-    const files = Array.from(e.dataTransfer.files);
-    addFiles(files);
+    addFiles(Array.from(e.dataTransfer.files));
   };
 
   // ── Submit ────────────────────────────────────────────────
@@ -371,16 +347,12 @@ export default function BattleReportAnalyzer({
     setAnalyzing(true);
     setStep('analyzing');
     setError('');
-
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.access_token) throw new Error('Not authenticated');
 
       const payload = {
-        images: images.map(img => ({
-          base64: img.base64,
-          mediaType: img.mediaType,
-        })),
+        images: images.map(img => ({ base64: img.base64, mediaType: img.mediaType })),
         intake,
       };
 
@@ -394,12 +366,8 @@ export default function BattleReportAnalyzer({
       });
 
       const data = await res.json();
-
       if (!res.ok) {
-        if (data.error === 'upgrade_required') {
-          router.push('/upgrade');
-          return;
-        }
+        if (data.error === 'upgrade_required') { router.push('/upgrade'); return; }
         throw new Error(data.error || 'Analysis failed');
       }
 
@@ -428,7 +396,10 @@ export default function BattleReportAnalyzer({
   // ── Ask Buddy bridge ──────────────────────────────────────
   const handleAskBuddy = () => {
     if (!result) return;
-    const summary = `I just ran a Battle Report Analysis. Verdict: ${result.verdict}. Outcome: ${result.outcome}. Root causes: ${result.root_causes.join('; ')}. Can you give me more detail on how to fix this?`;
+    const opponentLine = result.opponent_name && result.opponent_name !== 'Unknown'
+      ? ` vs ${result.opponent_name}${result.opponent_power && result.opponent_power !== 'not visible' ? ` (${result.opponent_power})` : ''}`
+      : '';
+    const summary = `I just ran a Battle Report Analysis${opponentLine}. Verdict: ${result.verdict}. Outcome: ${result.outcome}. Root causes: ${result.root_causes.join('; ')}. Can you give me more detail on how to fix this?`;
     sessionStorage.setItem('buddy_prefill', summary);
     router.push('/buddy');
   };
@@ -436,7 +407,7 @@ export default function BattleReportAnalyzer({
   if (!isOpen) return null;
 
   // ─────────────────────────────────────────────────────────
-  // LOCKED STATE (free tier or at limit)
+  // LOCKED STATE
   // ─────────────────────────────────────────────────────────
   if (isLocked) {
     return (
@@ -450,8 +421,7 @@ export default function BattleReportAnalyzer({
           <p className="text-gray-400 text-sm mb-6 leading-relaxed">
             {isFree
               ? 'Upload your battle report screenshots. Get an expert breakdown of exactly why you won or lost — type matchup, morale cascade, decoration gap, EW analysis, and a rematch verdict.'
-              : `You've used all ${reportsLimitToday} analyses today. Resets at midnight UTC.`
-            }
+              : `You've used all ${reportsLimitToday} analyses today. Resets at midnight UTC.`}
           </p>
           {isFree ? (
             <button
@@ -492,15 +462,14 @@ export default function BattleReportAnalyzer({
               <p className="text-xs text-gray-400">
                 {isFounding
                   ? 'Unlimited · Founding Member'
-                  : `${reportsLimitToday - reportsUsedToday} of ${reportsLimitToday} remaining today`
-                }
+                  : `${reportsLimitToday - reportsUsedToday} of ${reportsLimitToday} remaining today`}
               </p>
             </div>
           </div>
           <button onClick={onClose} className="text-gray-500 hover:text-white transition-colors text-xl">✕</button>
         </div>
 
-        {/* ── Tab Bar — only shown when not analyzing ── */}
+        {/* ── Tab Bar ── */}
         {step !== 'analyzing' && (
           <div className="flex border-b border-gray-700 px-6">
             <button
@@ -541,7 +510,6 @@ export default function BattleReportAnalyzer({
                 ))}
               </div>
             )}
-
             {historyError && (
               <div className="text-center py-8">
                 <p className="text-red-400 text-sm mb-3">{historyError}</p>
@@ -553,7 +521,6 @@ export default function BattleReportAnalyzer({
                 </button>
               </div>
             )}
-
             {!historyLoading && !historyError && history.length === 0 && (
               <div className="text-center py-12">
                 <div className="text-4xl mb-3">⚔️</div>
@@ -567,41 +534,49 @@ export default function BattleReportAnalyzer({
                 </button>
               </div>
             )}
-
             {!historyLoading && history.length > 0 && (
               <div className="space-y-2">
                 {history.map((report) => {
                   const outcomeChip = OUTCOME_CHIP[report.outcome] ?? 'bg-gray-700 border-gray-600 text-gray-400';
                   const typeShort = getReportTypeShort(report.report_type);
+                  const hasOpponent = report.opponent_name && report.opponent_name !== 'Unknown';
+                  const hasPower = report.opponent_power && report.opponent_power !== 'not visible';
+
                   return (
                     <div
                       key={report.id}
-                      className="flex items-center gap-3 bg-gray-800/60 border border-gray-700/50 rounded-xl px-4 py-3"
+                      className="bg-gray-800/60 border border-gray-700/50 rounded-xl px-4 py-3"
                     >
-                      {/* Outcome chip */}
-                      <span className={`shrink-0 text-xs font-bold border rounded px-2 py-0.5 ${outcomeChip}`}>
-                        {report.outcome}
-                      </span>
-
-                      {/* Type chip */}
-                      <span className="shrink-0 text-xs font-medium bg-gray-700 text-gray-400 border border-gray-600 rounded px-2 py-0.5">
-                        {typeShort}
-                      </span>
-
-                      {/* Verdict preview */}
-                      <p className="flex-1 text-gray-300 text-sm truncate min-w-0">
+                      {/* Row 1 — outcome chip + opponent + date */}
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <span className={`shrink-0 text-xs font-bold border rounded px-2 py-0.5 ${outcomeChip}`}>
+                          {report.outcome}
+                        </span>
+                        <span className="shrink-0 text-xs font-medium bg-gray-700 text-gray-400 border border-gray-600 rounded px-2 py-0.5">
+                          {typeShort}
+                        </span>
+                        {hasOpponent && (
+                          <>
+                            <span className="text-gray-500 text-xs">vs</span>
+                            <span className="text-gray-200 text-xs font-medium truncate">
+                              {report.opponent_name}
+                              {hasPower && (
+                                <span className="text-gray-500 ml-1">({report.opponent_power})</span>
+                              )}
+                            </span>
+                          </>
+                        )}
+                        <span className="shrink-0 ml-auto text-gray-500 text-xs">
+                          {formatReportDate(report.created_at)}
+                        </span>
+                      </div>
+                      {/* Row 2 — verdict */}
+                      <p className="text-gray-400 text-xs leading-relaxed truncate">
                         {report.verdict}
                       </p>
-
-                      {/* Date + screenshot count */}
-                      <div className="shrink-0 text-right">
-                        <div className="text-gray-500 text-xs">{formatReportDate(report.created_at)}</div>
-                        <div className="text-gray-600 text-xs">{report.images_count} screens</div>
-                      </div>
                     </div>
                   );
                 })}
-
                 <p className="text-center text-gray-600 text-xs pt-2">
                   Showing last {history.length} report{history.length !== 1 ? 's' : ''}
                 </p>
@@ -610,18 +585,15 @@ export default function BattleReportAnalyzer({
           </div>
         )}
 
-        {/* ── ANALYZE TAB CONTENT ── */}
+        {/* ── ANALYZE TAB ── */}
         {(activeTab === 'analyze' || step === 'analyzing') && (
           <>
             {/* ── Step: UPLOAD ── */}
             {step === 'upload' && (
               <div className="p-6 space-y-5">
                 <p className="text-gray-300 text-sm leading-relaxed">
-                  Upload screenshots of your battle report. More screens = better analysis.
-                  Recommended: all 6 tabs in order.
+                  Upload screenshots of your battle report. More screens = better analysis. Recommended: all 6 tabs in order.
                 </p>
-
-                {/* Drop zone */}
                 <div
                   ref={dropRef}
                   onDragOver={handleDragOver}
@@ -643,13 +615,9 @@ export default function BattleReportAnalyzer({
                     accept="image/jpeg,image/png,image/webp"
                     multiple
                     className="hidden"
-                    onChange={(e) => {
-                      if (e.target.files) addFiles(Array.from(e.target.files));
-                    }}
+                    onChange={(e) => { if (e.target.files) addFiles(Array.from(e.target.files)); }}
                   />
                 </div>
-
-                {/* Image previews */}
                 {images.length > 0 && (
                   <div className="grid grid-cols-3 gap-3">
                     {images.map((img, idx) => (
@@ -683,20 +651,17 @@ export default function BattleReportAnalyzer({
                     )}
                   </div>
                 )}
-
-                {/* Tip */}
                 <div className="bg-blue-900/20 border border-blue-800/40 rounded-xl p-4 text-xs text-blue-300 leading-relaxed">
-                  <span className="font-semibold">Pro tip:</span> For the most accurate analysis, upload in screen order:
-                  Outcome → Troop Breakdown → Hero Skills → Stat Comparison → Gear → Power Up.
-                  The Troop Breakdown screen is the most important.
+                  <span className="font-semibold">Pro tip:</span> For the most accurate analysis, upload in screen order: Outcome → Troop Breakdown → Hero Skills → Stat Comparison → Gear → Power Up. The Troop Breakdown screen is the most important.
                 </div>
-
                 <button
                   onClick={() => setStep('intake')}
                   disabled={images.length === 0}
                   className="w-full bg-yellow-500 hover:bg-yellow-400 disabled:bg-gray-700 disabled:text-gray-500 text-black font-bold py-3 rounded-xl transition-colors"
                 >
-                  {images.length === 0 ? 'Upload at least 1 screenshot' : `Continue with ${images.length} screenshot${images.length > 1 ? 's' : ''} →`}
+                  {images.length === 0
+                    ? 'Upload at least 1 screenshot'
+                    : `Continue with ${images.length} screenshot${images.length > 1 ? 's' : ''} →`}
                 </button>
               </div>
             )}
@@ -708,14 +673,12 @@ export default function BattleReportAnalyzer({
                   <p className="text-gray-300 text-sm mb-1 font-medium">Quick setup <span className="text-gray-500">(30 seconds)</span></p>
                   <p className="text-gray-500 text-xs">These questions capture details that don&apos;t show in screenshots.</p>
                 </div>
-
                 {error && (
                   <div className="bg-red-900/30 border border-red-700/50 rounded-xl p-4 text-red-300 text-sm">
                     {error}
                   </div>
                 )}
-
-                {/* Q1 — Report Type (first so cards question can filter by PvP vs PvE) */}
+                {/* Q1 — Report Type */}
                 <div className="space-y-2">
                   <label className="text-sm text-gray-300 font-medium">What type of report is this?</label>
                   <div className="space-y-2">
@@ -734,7 +697,6 @@ export default function BattleReportAnalyzer({
                     ))}
                   </div>
                 </div>
-
                 {/* Q2 — Squad Type */}
                 <div className="space-y-2">
                   <label className="text-sm text-gray-300 font-medium">What&apos;s your main squad&apos;s troop type?</label>
@@ -754,15 +716,13 @@ export default function BattleReportAnalyzer({
                     ))}
                   </div>
                 </div>
-
-                {/* Q3 — Tactics Cards (multi-select, only shown after report type selected) */}
+                {/* Q3 — Tactics Cards */}
                 {intake.report_type !== '' && (
                   <div className="space-y-3">
                     <div>
                       <label className="text-sm text-gray-300 font-medium">Which Tactics Cards were active in your deck?</label>
                       <p className="text-xs text-gray-500 mt-0.5">Select all that apply — or skip if none.</p>
                     </div>
-
                     {Object.entries(getCardGroups(intake.report_type)).map(([groupName, cards]) => (
                       <div key={groupName} className="space-y-1.5">
                         <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{groupName}</p>
@@ -780,9 +740,7 @@ export default function BattleReportAnalyzer({
                                 }`}
                               >
                                 <span className={`w-4 h-4 shrink-0 rounded border flex items-center justify-center text-xs font-bold ${
-                                  selected
-                                    ? 'bg-yellow-400 border-yellow-400 text-black'
-                                    : 'border-gray-600 bg-gray-900'
+                                  selected ? 'bg-yellow-400 border-yellow-400 text-black' : 'border-gray-600 bg-gray-900'
                                 }`}>
                                   {selected ? '✓' : ''}
                                 </span>
@@ -793,16 +751,13 @@ export default function BattleReportAnalyzer({
                         </div>
                       </div>
                     ))}
-
                     <p className="text-xs text-gray-600 italic">
                       {intake.tactics_cards.length === 0
                         ? 'Nothing selected — analyzer will note no cards were active.'
-                        : `${intake.tactics_cards.length} card${intake.tactics_cards.length > 1 ? 's' : ''} selected`
-                      }
+                        : `${intake.tactics_cards.length} card${intake.tactics_cards.length > 1 ? 's' : ''} selected`}
                     </p>
                   </div>
                 )}
-
                 <div className="flex gap-3">
                   <button
                     onClick={() => setStep('upload')}
@@ -829,11 +784,7 @@ export default function BattleReportAnalyzer({
                 <p className="text-gray-400 text-sm">Reading {images.length} screenshot{images.length > 1 ? 's' : ''}. This takes 10–20 seconds.</p>
                 <div className="flex justify-center gap-1 mt-4">
                   {[0, 1, 2].map(i => (
-                    <div
-                      key={i}
-                      className="w-2 h-2 bg-yellow-400 rounded-full animate-bounce"
-                      style={{ animationDelay: `${i * 0.15}s` }}
-                    />
+                    <div key={i} className="w-2 h-2 bg-yellow-400 rounded-full animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
                   ))}
                 </div>
               </div>
@@ -842,7 +793,6 @@ export default function BattleReportAnalyzer({
             {/* ── Step: RESULT ── */}
             {step === 'result' && result && (
               <div className="p-6 space-y-5">
-
                 {/* Outcome + Verdict */}
                 <div className="bg-gray-800 rounded-2xl p-5 space-y-2">
                   <div className="flex items-center justify-between">
@@ -852,6 +802,15 @@ export default function BattleReportAnalyzer({
                     <span className="text-xs text-gray-400">{meta?.images_analyzed} screenshot{(meta?.images_analyzed ?? 0) > 1 ? 's' : ''} analyzed</span>
                   </div>
                   <div className="text-yellow-300 font-bold text-base">{result.verdict}</div>
+                  {/* Opponent line */}
+                  {result.opponent_name && result.opponent_name !== 'Unknown' && (
+                    <div className="text-gray-400 text-xs">
+                      vs <span className="text-gray-200 font-medium">{result.opponent_name}</span>
+                      {result.opponent_power && result.opponent_power !== 'not visible' && (
+                        <span className="text-gray-500 ml-1">({result.opponent_power})</span>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 {/* Power Differential */}
@@ -901,12 +860,12 @@ export default function BattleReportAnalyzer({
                 {/* Stat Comparison */}
                 <Section title="📊 Stat Comparison">
                   <div className="grid grid-cols-2 gap-2">
-                    {[
+                    {([
                       ['ATK', result.stat_comparison.atk_status],
                       ['HP', result.stat_comparison.hp_status],
                       ['DEF', result.stat_comparison.def_status],
                       ['Lethality', result.stat_comparison.lethality_status],
-                    ].map(([label, status]) => (
+                    ] as [string, string][]).map(([label, status]) => (
                       <div key={label} className="flex items-center justify-between bg-gray-800 rounded-lg px-3 py-2">
                         <span className="text-gray-400 text-xs">{label}</span>
                         <span className={`text-xs font-bold ${STAT_COLOR[status] ?? 'text-gray-400'}`}>
@@ -955,8 +914,7 @@ export default function BattleReportAnalyzer({
                   <div className="bg-red-900/30 border border-red-700/50 rounded-xl p-4">
                     <div className="text-red-400 font-bold text-sm mb-1">⚠️ Permanent Loss Warning</div>
                     <p className="text-red-300 text-xs">
-                      Your hospital may have been full during this fight. High kill counts indicate troops died permanently rather than going to hospital.
-                      Upgrade hospital capacity before your next kill event.
+                      Your hospital may have been full during this fight. High kill counts indicate troops died permanently rather than going to hospital. Upgrade hospital capacity before your next kill event.
                     </p>
                   </div>
                 )}
@@ -966,8 +924,7 @@ export default function BattleReportAnalyzer({
                   <ul className="space-y-2">
                     {result.root_causes.map((cause, i) => (
                       <li key={i} className="flex gap-2 text-sm text-gray-300">
-                        <span className="text-yellow-400 shrink-0">{i + 1}.</span>
-                        {cause}
+                        <span className="text-yellow-400 shrink-0">{i + 1}.</span> {cause}
                       </li>
                     ))}
                   </ul>
@@ -1016,12 +973,10 @@ export default function BattleReportAnalyzer({
                     Ask Buddy More →
                   </button>
                 </div>
-
                 <p className="text-center text-xs text-gray-600">
                   {meta?.reports_remaining_today === 'unlimited'
                     ? 'Unlimited analyses · Founding Member'
-                    : `${meta?.reports_remaining_today} analyses remaining today`
-                  }
+                    : `${meta?.reports_remaining_today} analyses remaining today`}
                 </p>
               </div>
             )}
@@ -1035,7 +990,6 @@ export default function BattleReportAnalyzer({
 // ─────────────────────────────────────────────────────────────
 // SECTION WRAPPER
 // ─────────────────────────────────────────────────────────────
-
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="bg-gray-800/60 border border-gray-700/50 rounded-xl p-4 space-y-3">
