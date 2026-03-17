@@ -57,19 +57,19 @@ export default function WarRoomPage() {
       const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
       if (isMobile) {
         const overlay = document.createElement('div');
-        overlay.style.cssText = 'position:fixed;inset:0;background:#0a0a0a;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;';
+        overlay.style.cssText = 'position:fixed;inset:0;background:#0a0a0a;z-index:9999;overflow-y:auto;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;align-items:center;padding:20px;';
         const img = document.createElement('img');
         img.src = url;
-        img.style.cssText = 'max-width:100%;max-height:75vh;border-radius:12px;display:block;';
+        img.style.cssText = 'width:100%;border-radius:12px;display:block;margin-top:20px;';
         const msg = document.createElement('p');
         msg.innerText = 'Press and hold image → Save to Photos';
-        msg.style.cssText = 'color:#e8a020;font-size:15px;font-family:sans-serif;margin-top:20px;text-align:center;';
+        msg.style.cssText = 'color:#e8a020;font-size:15px;font-family:sans-serif;margin-top:16px;text-align:center;flex-shrink:0;';
         const btn = document.createElement('button');
         btn.innerText = '✕ Close';
-        btn.style.cssText = 'margin-top:16px;background:#333;color:#fff;border:none;padding:10px 24px;border-radius:8px;font-size:14px;cursor:pointer;';
+        btn.style.cssText = 'margin-top:16px;margin-bottom:32px;background:#333;color:#fff;border:none;padding:10px 24px;border-radius:8px;font-size:14px;cursor:pointer;flex-shrink:0;';
         btn.onclick = () => document.body.removeChild(overlay);
-        overlay.appendChild(img);
         overlay.appendChild(msg);
+        overlay.appendChild(img);
         overlay.appendChild(btn);
         document.body.appendChild(overlay);
       } else {
