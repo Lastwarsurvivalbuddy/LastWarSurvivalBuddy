@@ -3,11 +3,15 @@
 // Updated: March 8, 2026 — profile data model redesign (buckets replace raw stats)
 // Updated: March 9, 2026 — corrected Alliance Duel day mapping + real game labels
 // Updated: March 17, 2026 — beginner_mode support
+// Updated: March 17, 2026 — hero upgrades locked to Day 4 only (never recommend outside Train Heroes day)
+//                          — greeting uses commander_name, not HQ level
+//                          — beginner troop training only on Day 5
 
 import type { SquadPowerTier, RankBucket, PowerBucket, KillTier } from '@/lib/profileTypes'
 import { SQUAD_POWER_TIER_LABELS, RANK_BUCKET_LABELS, KILL_TIER_TITLES } from '@/lib/profileTypes'
 
 export type ActionPriority = 'critical' | 'high' | 'medium' | 'low'
+
 export type ActionCategory =
   | 'arms_race'
   | 'alliance_duel'
@@ -41,32 +45,19 @@ export interface ActionPlanResult {
   insight: string
 }
 
-// ─── Hero EXP Breakpoints ────────────────────────────────────────────────────
-// Source: lastwarhandbook.com/calculators/hero-exp
-
+// ─── Hero EXP Breakpoints ──────────────────────────────────────────────────────
 export const HERO_EXP_BREAKPOINTS: Record<number, { expFromL1: number; label: string; hqRequired: number }> = {
-  50:  { expFromL1: 2_500_000,   label: 'Early game milestone',         hqRequired: 10 },
-  68:  { expFromL1: 4_500_000,   label: 'Major power spike begins',     hqRequired: 14 },
-  69:  { expFromL1: 4_500_000,   label: 'Major power spike',            hqRequired: 14 },
-  70:  { expFromL1: 4_900_000,   label: 'Skill unlock tier',            hqRequired: 14 },
-  72:  { expFromL1: 5_900_000,   label: 'Ultimate enhancement unlock',  hqRequired: 15 },
-  100: { expFromL1: 33_000_000,  label: 'Mid-game milestone',           hqRequired: 20 },
-  175: { expFromL1: 999_999_999, label: 'Max level',                    hqRequired: 35 },
+  50:  { expFromL1: 2_500_000,   label: 'Early game milestone',          hqRequired: 10 },
+  68:  { expFromL1: 4_500_000,   label: 'Major power spike begins',      hqRequired: 14 },
+  69:  { expFromL1: 4_500_000,   label: 'Major power spike',             hqRequired: 14 },
+  70:  { expFromL1: 4_900_000,   label: 'Skill unlock tier',             hqRequired: 14 },
+  72:  { expFromL1: 5_900_000,   label: 'Ultimate enhancement unlock',   hqRequired: 15 },
+  100: { expFromL1: 33_000_000,  label: 'Mid-game milestone',            hqRequired: 20 },
+  175: { expFromL1: 999_999_999, label: 'Max level',                     hqRequired: 35 },
 }
 
-// HQ level → max hero level unlock table
 export const HQ_HERO_LEVEL_UNLOCK: Record<number, number> = {
-  1:  1,
-  5:  30,
-  10: 50,
-  14: 70,
-  15: 72,
-  16: 75,
-  18: 80,
-  20: 100,
-  25: 120,
-  30: 150,
-  35: 175,
+  1: 1, 5: 30, 10: 50, 14: 70, 15: 72, 16: 75, 18: 80, 20: 100, 25: 120, 30: 150, 35: 175,
 }
 
 export function getMaxHeroLevelForHQ(hqLevel: number): number {
@@ -93,18 +84,17 @@ export function getNextExpBreakpoint(currentHeroLevel: number): { level: number;
   return entry ? { level: entry.level, label: entry.label, expNeeded: entry.expFromL1 } : null
 }
 
-// ─── Alliance Duel Day Calculation ───────────────────────────────────────────
-// Reset is always 2am UTC
-// Subtract 2 hours so the boundary aligns with the 2am UTC reset.
+// ─── Alliance Duel Day Calculation ─────────────────────────────────────────────
+// Reset is always 2am UTC — no DST adjustment ever applied
 //
-// Confirmed schedule (Server 1032, DST active March 2026):
-//   2am UTC Mon → Day 1: Radar Training      (1 pt)
-//   2am UTC Tue → Day 2: Base Expansion       (2 pts)
-//   2am UTC Wed → Day 3: Age of Science       (2 pts)
-//   2am UTC Thu → Day 4: Train Heroes         (2 pts)
-//   2am UTC Fri → Day 5: Total Mobilization   (2 pts)
-//   2am UTC Sat → Day 6: Enemy Buster         (4 pts)
-//   2am UTC Sun → Day 7: Reset                (0 pts)
+// Confirmed schedule (Server 1032):
+// 2am UTC Mon → Day 1: Radar Training      (1 pt)
+// 2am UTC Tue → Day 2: Base Expansion      (2 pts)
+// 2am UTC Wed → Day 3: Age of Science      (2 pts)
+// 2am UTC Thu → Day 4: Train Heroes        (2 pts)  ← ONLY day to recommend hero upgrades
+// 2am UTC Fri → Day 5: Total Mobilization  (2 pts)
+// 2am UTC Sat → Day 6: Enemy Buster        (4 pts)
+// 2am UTC Sun → Day 7: Reset               (0 pts)
 
 interface DuelDayResult {
   day: number
@@ -113,10 +103,8 @@ interface DuelDayResult {
 }
 
 export function getDuelDay(now: Date = new Date()): DuelDayResult {
-  // Shift back 2 hours so the day boundary aligns with the 2am UTC reset
   const adjusted = new Date(now.getTime() - 2 * 60 * 60 * 1000)
   const utcDay = adjusted.getUTCDay() // 0=Sun, 1=Mon, ..., 6=Sat
-
   const schedule: Record<number, DuelDayResult> = {
     0: { day: 7, label: 'Reset',              points: 0 },
     1: { day: 1, label: 'Radar Training',     points: 1 },
@@ -126,30 +114,28 @@ export function getDuelDay(now: Date = new Date()): DuelDayResult {
     5: { day: 5, label: 'Total Mobilization', points: 2 },
     6: { day: 6, label: 'Enemy Buster',       points: 4 },
   }
-
   return schedule[utcDay]
 }
 
-// ─── Profile Types ───────────────────────────────────────────────────────────
-
+// ─── Profile Types ─────────────────────────────────────────────────────────────
 export interface CommanderProfile {
   hq_level: number
+  commander_name?: string
   server_day?: number
   season?: number
   spend_style: string
   playstyle: string
   troop_type: string
-  troop_tier: string            // under_t10 | t10 | t11
+  troop_tier: string // under_t10 | t10 | t11
   rank_bucket?: RankBucket
   squad_power_tier?: SquadPowerTier
   power_bucket?: PowerBucket
   kill_tier?: KillTier
-  tier?: string                 // subscription tier
-  beginner_mode?: boolean       // true = plain English, simplified actions, no endgame content
+  tier?: string // subscription tier
+  beginner_mode?: boolean
 }
 
-// ─── Friendly display helpers ────────────────────────────────────────────────
-
+// ─── Friendly display helpers ──────────────────────────────────────────────────
 function squadPowerLabel(tier?: SquadPowerTier): string {
   if (!tier) return 'unknown'
   return SQUAD_POWER_TIER_LABELS[tier] ?? tier
@@ -165,9 +151,18 @@ function killTitle(tier?: KillTier): string {
   return KILL_TIER_TITLES[tier] ?? tier
 }
 
-// ─── Beginner Action Plan Generator ──────────────────────────────────────────
+function getGreeting(profile: CommanderProfile): string {
+  const name = profile.commander_name?.trim()
+  return name ? `Commander ${name}` : 'Commander'
+}
+
+// ─── Beginner Action Plan Generator ────────────────────────────────────────────
 // Plain English. One clear task at a time. No jargon. No endgame content.
 // Max 4 actions. Encouraging tone.
+// HARD RULES:
+//   - Hero upgrades: Day 4 ONLY. No exceptions.
+//   - Troop training: Day 5 ONLY (Total Mobilization), or if literally nothing else to do.
+//   - HQ push: Always present except reset day.
 
 function generateBeginnerActionPlan(profile: CommanderProfile): ActionPlanResult {
   const actions: DailyAction[] = []
@@ -180,39 +175,46 @@ function generateBeginnerActionPlan(profile: CommanderProfile): ActionPlanResult
   const duelAction = getBeginnerDuelAction(day, label, points, hq, profile)
   if (duelAction) actions.push(duelAction)
 
-  // ── HQ upgrade push ──
-  if (hq < 16) {
+  // ── HQ upgrade push — always present except reset day ──
+  if (day !== 7) {
     actions.push({
       id: 'hq_push_beginner',
       category: 'general',
-      priority: 'high',
-      title: '🏠 Upgrade Your Headquarters',
-      detail: `Your HQ is level ${hq}. Getting to HQ 16 is your most important goal right now — it unlocks stronger troops and gives your heroes a big power boost. Queue your next HQ upgrade and work on clearing any requirements blocking it.`,
-      buddyPrompt: `I'm a newer player at HQ ${hq}, server day ${profile.server_day ?? '?'}. What do I need to do to upgrade my HQ to the next level, and what should I be doing today to get there faster?`,
+      priority: hq < 16 ? 'high' : 'medium',
+      title: '🏠 Push Your HQ Upgrade',
+      detail: `Your HQ is level ${hq}. ${hq < 20
+        ? `Getting your HQ higher is your most important long-term goal — it unlocks stronger troops, more buildings, and bigger hero levels. Make sure your next HQ upgrade is queued and work on clearing any requirements blocking it.`
+        : `Keep pushing HQ upgrades — every level unlocks more power. Make sure your next upgrade is queued.`}`,
+      buddyPrompt: `I'm at HQ ${hq}, server day ${profile.server_day ?? '?'}. What do I need to do to upgrade my HQ to the next level, and what should I be doing today to get there faster?`,
     })
   }
 
-  // ── Hero leveling (beginner-friendly) ──
-  if (day !== 7) {
+  // ── Hero leveling — DAY 4 ONLY ──
+  // HARD RULE: Never recommend hero upgrades on any other day.
+  // Hero EXP, skill medals, exclusive weapons all score on Duel Day 4 (Train Heroes).
+  // Spending them any other day wastes VS points.
+  if (day === 4) {
     actions.push({
       id: 'hero_level_beginner',
       category: 'heroes',
-      priority: 'medium',
-      title: '🦸 Level Up Your Heroes',
-      detail: `Your heroes can reach level ${maxHeroLevel} right now. ${nextBreakpoint ? `Try to push your main hero to level ${nextBreakpoint.level} — that's when they get a noticeable power boost.` : 'Push your main hero to the highest level you can reach.'} Use any EXP items you've collected from events and missions.`,
-      buddyPrompt: `I'm newer to the game at HQ ${hq}. My heroes can reach level ${maxHeroLevel}. Which heroes should I focus on leveling up first, and what's the fastest way to get EXP items?`,
+      priority: 'critical',
+      title: '🦸 Hero Day — Level Up Your Heroes NOW',
+      detail: `Today is Train Heroes day — the ONLY day of the week to use your Hero EXP items. Every hero level earns alliance points. Your heroes can reach level ${maxHeroLevel} right now. ${nextBreakpoint ? `Push toward level ${nextBreakpoint.level} — that's when they get a noticeable power spike.` : 'Push your main hero as high as you can.'} Use all the EXP items you've been saving.`,
+      buddyPrompt: `Today is Alliance Duel Day 4 — Train Heroes. I'm at HQ ${hq} and my heroes can reach level ${maxHeroLevel}. Which heroes should I prioritize and how do I get the most alliance points today?`,
+      points: 2,
     })
   }
 
-  // ── Troop training (beginner) ──
-  if (profile.troop_tier === 'under_t10') {
+  // ── Troop training — DAY 5 ONLY (Total Mobilization) ──
+  // On other days troop training doesn't score extra and is just filler noise.
+  if (day === 5 && profile.troop_tier === 'under_t10') {
     actions.push({
       id: 'troop_train_beginner',
       category: 'troops',
-      priority: 'medium',
-      title: `🪖 Keep Training ${getTroopTypeLabel(profile.troop_type)} Troops`,
-      detail: `Always keep your barracks busy. Training troops is one of the best things you can do every day — they make you stronger and harder to attack. Focus on ${getTroopTypeLabel(profile.troop_type)} troops, which is your chosen troop type.`,
-      buddyPrompt: `I'm a newer player at HQ ${hq}. My troop type is ${profile.troop_type} and I'm below T10. How many troops should I be training, and what's the most efficient way to keep my barracks busy?`,
+      priority: 'high',
+      title: `🪖 Train Troops All Day — It Scores Today`,
+      detail: `Today is Total Mobilization — every troop you train earns alliance points. Keep your barracks running non-stop all day. Focus on ${getTroopTypeLabel(profile.troop_type)} troops.`,
+      buddyPrompt: `Today is Alliance Duel Day 5 — Total Mobilization. I'm a newer player at HQ ${hq} with ${profile.troop_type} troops. How do I maximize troop training today for the most alliance points?`,
     })
   }
 
@@ -228,7 +230,7 @@ function generateBeginnerActionPlan(profile: CommanderProfile): ActionPlanResult
     duelDayLabel: label,
     duelDayPoints: points,
     strategicInsight,
-    greeting: `Commander HQ ${hq}`,
+    greeting: getGreeting(profile),
     dutyReport: `Server Day ${profile.server_day || '—'} · Today's Alliance Event: ${label}`,
     insight: strategicInsight,
   }
@@ -248,52 +250,53 @@ function getBeginnerDuelAction(
       priority: 'low',
       title: '📅 Rest Day — No Alliance Event Today',
       detail: 'The Alliance Duel resets today. No event scoring until tomorrow. Good day to collect resources, complete daily missions, and queue upgrades.',
-      buddyPrompt: `Today is the Alliance Duel reset day — no event scoring. I'm a newer player at HQ ${hq}. What are the best things to do on a rest day to set myself up for the week?`,
+      buddyPrompt: `Today is the Alliance Duel reset day. I'm a newer player at HQ ${hq}. What are the best things to do on a rest day to set myself up for the week?`,
     }
   }
+
   if (day === 1) {
     return {
       id: 'duel_radar_beginner',
       category: 'alliance_duel',
-      priority: 'medium',
-      title: '🚁 Alliance Event: Radar Training (Easy Day)',
-      detail: "Today's alliance event is Radar Training — it's the lowest-scoring day of the week (1 point). You don't need to do anything special. Just play normally and collect your daily rewards.",
-      buddyPrompt: `Today is Alliance Duel Day 1 — Radar Training. I'm newer to the game at HQ ${hq}. What should I focus on today since it's a low-scoring day?`,
+      priority: 'low',
+      title: '🚁 Alliance Event: Radar Training (Low-Key Day)',
+      detail: "Today is the lowest-scoring alliance day of the week (1 point). No special action required — just play normally. Good day to focus on your base and save resources for the bigger scoring days.",
+      buddyPrompt: `Today is Alliance Duel Day 1 — Radar Training, the lowest-scoring day. I'm at HQ ${hq}. What should I focus on to set up for the rest of the week?`,
       points: 1,
     }
   }
+
   if (day === 6) {
     return {
       id: 'duel_enemy_buster_beginner',
       category: 'alliance_duel',
       priority: 'critical',
       title: '⚔️ Big Alliance Battle Day — Join Your Alliance!',
-      detail: "Today is the most important alliance day of the week. Your whole alliance attacks another server together. Check in with your alliance leader for instructions. Even if you're new, showing up and participating earns points for your whole alliance.",
-      buddyPrompt: `Today is Alliance Duel Day 6 — Enemy Buster, the biggest alliance battle day. I'm a newer player at HQ ${hq}. How can I help my alliance even as a beginner? What should I do today?`,
+      detail: "Today is the most important alliance day of the week (4 pts). Your whole alliance attacks another server together. Check in with your alliance leader for instructions. Even as a newer player, showing up helps.",
+      buddyPrompt: `Today is Alliance Duel Day 6 — Enemy Buster. I'm a newer player at HQ ${hq}. How can I help my alliance even at my level? What should I do?`,
       points: 4,
     }
   }
 
-  // Double-dip days 2–5 — simplified, no "double-dip" jargon
   const dayDetails: Record<number, { title: string; task: string; category: ActionCategory }> = {
     2: {
       title: '🏗️ Alliance Event: Upgrade Your Base',
-      task: 'Finish any building upgrades you have queued today. Completing upgrades earns points for your alliance.',
+      task: 'Complete building upgrades today — finishing upgrades earns alliance points. Make sure something is always building.',
       category: 'alliance_duel',
     },
     3: {
       title: '🔬 Alliance Event: Complete Research',
-      task: 'Finish any research you have running today. Completing research earns points for your alliance. If nothing is queued, start something new in the Military tree.',
+      task: 'Finishing research earns alliance points today. If nothing is queued, start something new in the Military tree.',
       category: 'research',
     },
     4: {
-      title: '🦸 Alliance Event: Level Up Heroes',
-      task: 'Use your EXP items to level up your heroes today. Every hero level you gain earns points for your alliance.',
+      title: '🦸 Alliance Event: Train Heroes',
+      task: 'Today is the one day a week to use your Hero EXP items — every hero level earns alliance points. Save EXP for today every other day of the week.',
       category: 'heroes',
     },
     5: {
       title: '🪖 Alliance Event: Train Troops',
-      task: `Train as many troops as you can today. Every troop you train earns points for your alliance. Keep your barracks full all day.`,
+      task: 'Train as many troops as you can today. Every troop trained earns alliance points. Keep your barracks full all day.',
       category: 'troops',
     },
   }
@@ -306,39 +309,34 @@ function getBeginnerDuelAction(
     category: d.category,
     priority: 'critical',
     title: d.title,
-    detail: `${d.task} This is one of the best days to contribute to your alliance this week (${points} pts).`,
+    detail: `${d.task} This is one of the stronger scoring days of the week (${points} pts).`,
     buddyPrompt: `Today is Alliance Duel Day ${day} (${label}). I'm a newer player at HQ ${hq}. What's the simplest way to earn as many alliance points as possible today?`,
     points,
   }
 }
 
 function getTroopTypeLabel(troopType: string): string {
-  const map: Record<string, string> = {
-    aircraft: 'Aircraft',
-    tank: 'Tank',
-    missile: 'Missile',
-  }
+  const map: Record<string, string> = { aircraft: 'Aircraft', tank: 'Tank', missile: 'Missile' }
   return map[troopType] ?? troopType
 }
 
 function getBeginnerStrategicInsight(day: number, label: string, hq: number): string {
   if (day === 7) return `Rest day — no alliance event scoring today. Good time to collect resources, complete daily missions, and plan your next upgrade.`
   if (day === 6) return `Today is the biggest alliance battle day of the week. Log in, check your alliance chat for instructions, and participate — even small contributions help.`
-  if (day === 1) return `Today is a low-key alliance day (Radar Training, 1 point). No pressure — just play normally and save your resources for the bigger scoring days later this week.`
+  if (day === 1) return `Today is a low-key alliance day (Radar Training, 1 point). No pressure — just play normally and save your Hero EXP for Thursday's Train Heroes day.`
+  if (day === 4) return `Today is Train Heroes day — the ONLY day to use Hero EXP items. Every hero level scores alliance points. Don't level heroes on any other day.`
   if (day >= 2 && day <= 5) {
     const tasks: Record<number, string> = {
       2: 'finishing building upgrades',
       3: 'completing research',
-      4: 'leveling up heroes',
       5: 'training troops',
     }
-    return `Today your alliance earns points by ${tasks[day]}. Focus on that one thing and you'll make a real difference for your team.`
+    return `Today your alliance earns points by ${tasks[day] ?? 'the daily event'}. Focus on that one thing and you'll make a real difference for your team.`
   }
-  return `HQ ${hq} — keep upgrading your base and training troops every day. Consistency beats intensity in the early game.`
+  return `HQ ${hq} — keep upgrading your base consistently. Every level unlocks new power.`
 }
 
-// ─── Main Action Plan Generator ──────────────────────────────────────────────
-
+// ─── Main Action Plan Generator ────────────────────────────────────────────────
 export function generateActionPlan(profile: CommanderProfile): ActionPlanResult {
   // Route to beginner plan if beginner_mode is set
   if (profile.beginner_mode) {
@@ -347,24 +345,24 @@ export function generateActionPlan(profile: CommanderProfile): ActionPlanResult 
 
   const actions: DailyAction[] = []
   const { day, label, points } = getDuelDay()
-  const isDoubleDay      = day >= 2 && day <= 5
+
+  const isDoubleDay    = day >= 2 && day <= 5
   const isEnemyBusterDay = day === 6
-  const isDroneDay       = day === 1
-  const isResetDay       = day === 7
+  const isDroneDay     = day === 1
+  const isResetDay     = day === 7
 
-  const hq          = profile.hq_level || 1
-  const isEarlyGame = hq < 16
-  const isMidGame   = hq >= 16 && hq < 30
-  const isEndGame   = hq >= 30
+  const hq         = profile.hq_level || 1
+  const isEarlyGame  = hq < 16
+  const isMidGame    = hq >= 16 && hq < 30
+  const isEndGame    = hq >= 30
 
-  // Simplified troop tier checks
-  const isT11      = profile.troop_tier === 't11'
-  const isT10      = profile.troop_tier === 't10'
-  const isBelowT10 = profile.troop_tier === 'under_t10'
+  const isT11       = profile.troop_tier === 't11'
+  const isT10       = profile.troop_tier === 't10'
+  const isBelowT10  = profile.troop_tier === 'under_t10'
 
-  const isSpender = ['investor', 'whale', 'mega_whale'].includes(profile.spend_style)
+  const isSpender   = ['investor', 'whale', 'mega_whale'].includes(profile.spend_style)
 
-  const maxHeroLevel      = getMaxHeroLevelForHQ(hq)
+  const maxHeroLevel     = getMaxHeroLevelForHQ(hq)
   const nextHeroMilestone = getNextHeroMilestone(hq)
   const nextBreakpoint    = getNextExpBreakpoint(maxHeroLevel)
 
@@ -407,10 +405,20 @@ export function generateActionPlan(profile: CommanderProfile): ActionPlanResult 
     })
   }
 
-  // ── Hero action ──
-  if (!isResetDay) {
-    const heroAction = getHeroAction(hq, maxHeroLevel, nextBreakpoint, nextHeroMilestone, profile, day)
-    if (heroAction) actions.push(heroAction)
+  // ── Hero action — DAY 4 ONLY ──
+  // HARD RULE: Never recommend hero upgrades on any other day.
+  // Hero EXP, skill medals, exclusive weapons score on Duel Day 4 only.
+  // Spending them on any other day wastes VS points.
+  if (day === 4) {
+    actions.push({
+      id: 'hero_exp_duel',
+      category: 'heroes',
+      priority: 'critical',
+      title: '🦸 Train Heroes Day — Level Up Heroes for Duel + Arms Race',
+      detail: `Duel Day 4 is Train Heroes. Every hero level you gain scores Alliance Duel AND Arms Race points simultaneously. At HQ ${hq} your heroes can reach level ${maxHeroLevel}. ${nextBreakpoint ? `Next power spike: level ${nextBreakpoint.level} (${nextBreakpoint.label}).` : 'Push to max level.'}`,
+      buddyPrompt: `Today is Duel Day 4 — Train Heroes. I want to level up heroes for maximum Duel and Arms Race scoring. My HQ is ${hq}, max hero level I can reach is ${maxHeroLevel}. ${nextBreakpoint ? `Next key breakpoint is level ${nextBreakpoint.level}: ${nextBreakpoint.label}.` : ''} What heroes should I prioritize and how much EXP do I need?`,
+      points: 2,
+    })
   }
 
   // ── Total Mobilization Day (Day 5) ──
@@ -449,8 +457,8 @@ export function generateActionPlan(profile: CommanderProfile): ActionPlanResult 
     })
   }
 
-  // ── T10 unlock path ──
-  if (isBelowT10 && !isDoubleDay) {
+  // ── T10 unlock path (non-double days) ──
+  if (isBelowT10 && !isDoubleDay && !isResetDay) {
     actions.push({
       id: 't10_path',
       category: 'troops',
@@ -461,8 +469,8 @@ export function generateActionPlan(profile: CommanderProfile): ActionPlanResult 
     })
   }
 
-  // ── T11 Armament Research ──
-  if (isT11 && !isDoubleDay) {
+  // ── T11 Armament Research (non-double, non-reset days) ──
+  if (isT11 && !isDoubleDay && !isResetDay) {
     actions.push({
       id: 't11_armament',
       category: 'troops',
@@ -474,7 +482,7 @@ export function generateActionPlan(profile: CommanderProfile): ActionPlanResult 
   }
 
   // ── Hot Deals (spenders) ──
-  if (isSpender) {
+  if (isSpender && !isResetDay) {
     actions.push({
       id: 'hot_deal_check',
       category: 'spend',
@@ -485,8 +493,8 @@ export function generateActionPlan(profile: CommanderProfile): ActionPlanResult 
     })
   }
 
-  // ── Defense review (end game) ──
-  if (isEndGame && !isDoubleDay) {
+  // ── Defense review (endgame, non-double, non-reset) ──
+  if (isEndGame && !isDoubleDay && !isResetDay) {
     actions.push({
       id: 'defense_review',
       category: 'defense',
@@ -509,47 +517,13 @@ export function generateActionPlan(profile: CommanderProfile): ActionPlanResult 
     duelDayLabel: label,
     duelDayPoints: points,
     strategicInsight,
-    greeting: `Commander HQ ${hq}`,
+    greeting: getGreeting(profile),
     dutyReport: `Server Day ${profile.server_day || '—'} · Duel Day ${day}: ${label}`,
     insight: strategicInsight,
   }
 }
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
-function getHeroAction(
-  hq: number,
-  maxHeroLevel: number,
-  nextBreakpoint: ReturnType<typeof getNextExpBreakpoint>,
-  nextHeroMilestone: ReturnType<typeof getNextHeroMilestone>,
-  profile: CommanderProfile,
-  duelDay: number
-): DailyAction | null {
-  if (duelDay === 4) {
-    return {
-      id: 'hero_exp_duel',
-      category: 'heroes',
-      priority: 'critical',
-      title: '🦸 Train Heroes Day — Level Up Heroes for Duel + Arms Race',
-      detail: `Duel Day 4 is Train Heroes. Every hero level you gain scores Alliance Duel AND Arms Race points simultaneously. At HQ ${hq} your heroes can reach level ${maxHeroLevel}. ${nextBreakpoint ? `Next power spike: level ${nextBreakpoint.level} (${nextBreakpoint.label}).` : 'Push to max level.'}`,
-      buddyPrompt: `Today is Duel Day 4 — Train Heroes. I want to level up heroes for maximum Duel and Arms Race scoring. My HQ is ${hq}, max hero level I can reach is ${maxHeroLevel}. ${nextBreakpoint ? `Next key breakpoint is level ${nextBreakpoint.level}: ${nextBreakpoint.label}.` : ''} What heroes should I prioritize and how much EXP do I need?`,
-      points: 2,
-    }
-  }
-
-  if (nextBreakpoint && maxHeroLevel < 175) {
-    return {
-      id: 'hero_exp_push',
-      category: 'heroes',
-      priority: 'medium',
-      title: `🦸 Hero EXP — Push Toward Level ${nextBreakpoint.level} (${nextBreakpoint.label})`,
-      detail: `At HQ ${hq} your heroes can reach level ${maxHeroLevel}. Next key breakpoint is level ${nextBreakpoint.level}: "${nextBreakpoint.label}". ${nextHeroMilestone ? `Tip: Reach HQ ${nextHeroMilestone.targetHQ} to unlock hero level ${nextHeroMilestone.heroLevel}.` : ''} Push one carry hero past the breakpoint before spreading EXP across your squad.`,
-      buddyPrompt: `Help me plan my Hero EXP. My HQ is ${hq}, heroes can reach level ${maxHeroLevel}. Next key breakpoint is level ${nextBreakpoint.level} (${nextBreakpoint.label}). How should I allocate EXP across my squad?`,
-    }
-  }
-
-  return null
-}
+// ─── Helpers ───────────────────────────────────────────────────────────────────
 
 function getDuelFocusDetail(day: number, profile: CommanderProfile): string {
   switch (day) {
@@ -570,6 +544,9 @@ function getStrategicInsight(
   isDoubleDay: boolean
 ): string {
   if (isDoubleDay) {
+    if (day === 4) {
+      return `Today is Train Heroes Day — the ONLY day to spend Hero EXP items. Every hero level scores both Alliance Duel and Arms Race simultaneously. Save EXP every other day of the week for today.`
+    }
     return `Today is one of 4 double-dip days this week. Every action for Alliance Duel Day ${day} (${label}) simultaneously scores Arms Race points. This is the highest efficiency play in the game — most players miss this entirely.`
   }
   if (day === 6) {
@@ -579,7 +556,7 @@ function getStrategicInsight(
     return `Reset day — no Alliance Duel scoring today. Good time to plan the week, check upcoming events, and queue resources for the new duel cycle starting tomorrow (Radar Training Day).`
   }
   if (day === 1) {
-    return `Radar Training Day is the lowest-value Duel day (1 point). Use today to stockpile resources and set up for the high-value double-dip days starting tomorrow (Base Expansion, 2 pts).`
+    return `Radar Training Day is the lowest-value Duel day (1 point). Use today to stockpile resources and save your Hero EXP for Thursday's Train Heroes day — the only day hero upgrades score VS points.`
   }
   const nextMilestone = getNextHeroMilestone(profile.hq_level)
   return nextMilestone
