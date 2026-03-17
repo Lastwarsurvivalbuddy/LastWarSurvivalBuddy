@@ -48,7 +48,7 @@ export const DS_ROLES: DSRole[] = [
     label: 'Hospital guards',
     color: '#EF9F27',
     badgeBg: 'rgba(239,159,39,0.12)',
-    hint: 'Hold all 4 Field Hospitals. Without healing, we lose the war of attrition. Do NOT roam.',
+    hint: 'Hold all 4 Field Hospitals. Without healing, we lose the war of attrition. Do NOT roam. Add E or W after each name to assign east/west hospitals (e.g. PlayerName-E).',
     stageAdvice: 'Hold all Field Hospitals the entire battle. Each one heals 15 troops every 10 seconds. Lose these and we can\'t fight back.',
     fullWidth: true,
     placeholder: 'Dependable players who will hold position',
@@ -142,19 +142,15 @@ export const DS_BUILDINGS: DSBuilding[] = [
 export const DS_STAGES = [
   {
     stage: 'Prep (0–5 min)',
-    description: 'Enter battlefield. Set squads. Do NOT engage. Use this time to confirm roles.',
+    description: 'Enter battlefield. Set squads. Do NOT engage. Confirm roles.',
   },
   {
     stage: 'Stage 1 (0–10 min)',
-    description: 'East/West flanks rush Oil Refineries. Secure Info Center for +10% boost. Hospital guards take and hold all Field Hospitals. Roamers support flanks.',
+    description: 'Flanks rush Oil Refineries. Secure Info Center. Hospital guards hold. Roamers support.',
   },
   {
-    stage: 'Stage 2 (10–13 min)',
-    description: 'Nuclear Silo unlocks. Silo team + roamers rush it immediately. Arsenal and Mercenary Factory also unlock — contest if troops available.',
-  },
-  {
-    stage: 'Stage 3 (13–30 min)',
-    description: 'Oil Wells appear — low priority unless troops are depleted. Hold everything. Heal constantly via Field Hospitals.',
+    stage: 'Stage 2 (10 min+)',
+    description: 'Nuclear Silo unlocks. Silo team + roamers rush immediately. Hold everything. Keep healing.',
   },
 ];
 
