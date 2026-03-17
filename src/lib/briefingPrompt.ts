@@ -3,8 +3,9 @@
 // Rewritten: March 11, 2026 (session 11) — tight constraints, correct duel day, no hallucination
 // Updated: March 15, 2026 (session 17) — beginner_mode support
 // Updated: March 17, 2026 (session 28) — radar task day guidance added
+// Updated: March 17, 2026 (session 30) — supplemental Alliance Duel scoring tips added per day
 
-// ─── Duel day — aligned to 2am UTC reset ─────────────────────────────────────
+// ─── Duel day — aligned to duel reset ────────────────────────────────────────
 
 function getDuelDay(): { day: number; name: string } {
   const duelDays: Record<number, string> = {
@@ -37,13 +38,13 @@ function getDuelDay(): { day: number; name: string } {
 
 function getDuelAdvice(day: number): string {
   const advice: Record<number, string> = {
-    1: 'Duel Day 1 (Radar Training) — radar tasks score VS points today: run them. Save drone chip chests. Align stamina use with Drone Boost Arms Race phase if active. Don\'t let radar tasks hit cap or you stop accruing.',
-    2: 'Duel Day 2 (Base Expansion) — open pre-wrapped buildings, use Legendary Trade Truck if available (200K pts), align construction with City Building Arms Race phase. Save radar tasks — they score on Day 3, not today.',
-    3: 'Duel Day 3 (Age of Science) — radar tasks score VS points today: run them. Use research speedups, click to collect pre-staged research, use Valor Badges. Align with Tech Research Arms Race phase if active.',
-    4: 'Duel Day 4 (Train Heroes) — use hero recruit tickets, spend UR/SSR shards if available, use Hero EXP, align with Hero Advancement Arms Race phase. Save radar tasks — they score on Day 5, not today.',
-    5: 'Duel Day 5 (Total Mobilization) — radar tasks score VS points today: run them. Best triple-dip day: construction + research + training all overlap Arms Race. Stack everything.',
-    6: 'Duel Day 6 (Enemy Buster) — war day, 4 alliance pts. Use healing speedups today (only day they score). Coordinate kills on opponent server. Remove wall defense or shield. Radar tasks don\'t score VS today — no need to save them either.',
-    7: 'Duel Day 7 (Reset) — no duel today. Claim rewards, queue upgrades, prep for Monday. Save radar tasks — they score VS points on Day 1 tomorrow.',
+    1: 'Duel Day 1 (Radar Training) — radar tasks score VS points today: run them. Save drone chip chests. Align stamina use with Drone Boost Arms Race phase if active. Don\'t let radar tasks hit cap or you stop accruing. Advanced Scoring Tips to maximize Alliance Duel: review your alliance duel scoring theme. Open drone chip chests today — they score. If you sent gathering squads out before reset, call them back now for Day 1 gathering points. Don\'t let your radar task queue fill up or accrual stops.',
+    2: 'Duel Day 2 (Base Expansion) — open pre-wrapped buildings, use Legendary Trade Truck if available (200K pts), align construction with City Building Arms Race phase. Save radar tasks — they score on Day 3, not today. Advanced Scoring Tips to maximize Alliance Duel: review your alliance duel scoring theme. Save Survivor cards all week and open them today — they score on Day 2. Use the Secretary of Development queue whenever you kick off a build — it fills up fast on Day 2, so get in early after reset.',
+    3: 'Duel Day 3 (Age of Science) — radar tasks score VS points today: run them. Use research speedups, click to collect pre-staged research, use Valor Badges. Align with Tech Research Arms Race phase if active. Advanced Scoring Tips to maximize Alliance Duel: review your alliance duel scoring theme. Open drone component chests today — they score. Use Valor points today — they score big. Research speedups and research completions also score. Get in the Secretary of Science queue before reset so you\'re positioned right after reset — clear completions, then chain new research using Valor points.',
+    4: 'Duel Day 4 (Train Heroes) — use hero recruit tickets, spend UR/SSR shards if available, use Hero EXP, align with Hero Advancement Arms Race phase. Save radar tasks — they score on Day 5, not today. Advanced Scoring Tips to maximize Alliance Duel: review your alliance duel scoring theme. Use skill medals today — everyone has them, use them. Exclusive weapons and hero gear upgrades also score today. Don\'t sit on these resources.',
+    5: 'Duel Day 5 (Total Mobilization) — radar tasks score VS points today: run them. Best triple-dip day: construction + research + training all overlap Arms Race. Stack everything. Advanced Scoring Tips to maximize Alliance Duel: review your alliance duel scoring theme. All speedups score today. Overlord skill upgrades score — use them. Train troops aggressively — that is the primary scoring action today.',
+    6: 'Duel Day 6 (Enemy Buster) — war day, 4 alliance pts. Use healing speedups today (only day they score). Coordinate kills on opponent server. Remove wall defense or shield. Radar tasks don\'t score VS today — no need to save them either. Advanced Scoring Tips to maximize Alliance Duel: review your alliance duel scoring theme. Speedups score independently today. Kill as many enemy troops as possible — that is the primary scoring action.',
+    7: 'Duel Day 7 (Reset) — no duel today. Claim rewards, queue upgrades, prep for Monday. Save radar tasks — they score VS points on Day 1 tomorrow. Advanced Scoring Tips to maximize Alliance Duel: review your alliance duel scoring theme. Send gathering squads out before reset on long tasks — call them back after reset for Day 1 gathering points.',
   }
   return advice[day] ?? "Check in-game calendar for today's duel day."
 }
@@ -52,13 +53,13 @@ function getDuelAdvice(day: number): string {
 
 function getDuelAdviceBeginner(day: number): string {
   const advice: Record<number, string> = {
-    1: 'Today is Radar Training day — radar missions score alliance points today, so run them. The radar tower is in your base. Don\'t let your radar tasks fill up or you\'ll stop getting new ones.',
-    2: 'Today is Base Expansion day — you earn points by upgrading buildings. If you have buildings ready to upgrade, today is the day to do it. Save your radar missions for tomorrow (Day 3) — they score points then, not today.',
-    3: 'Today is Age of Science day — you earn points by doing research (the research lab in your base). Queue up research and use speedups today. Radar missions also score today, so run those too.',
-    4: 'Today is Train Heroes day — you earn points by leveling up your heroes. Use any hero XP items or recruit tickets you\'ve been saving. Save your radar missions for tomorrow (Day 5) — they score points then, not today.',
-    5: 'Today is Total Mobilization day — the best day of the week. Building upgrades, research, AND troop training all earn points. Do as much as you can today. Radar missions also score today, so run those too.',
-    6: 'Today is Enemy Buster day — you earn points by fighting enemies. Attack infected zones and enemy bases. This is the highest point day. Radar missions don\'t score today, but you don\'t need to save them either.',
-    7: 'Today is the weekly reset — no alliance duel today. Collect your weekly rewards and get ready for next week. Save your radar missions for tomorrow (Day 1) — they\'ll score points then.',
+    1: 'Today is Radar Training day — radar missions score alliance points today, so run them. The radar tower is in your base. Don\'t let your radar tasks fill up or you\'ll stop getting new ones. Tip: open any drone chests you have saved — they score today too. If you sent troops out gathering before reset, call them back now to get gathering points for today.',
+    2: 'Today is Base Expansion day — you earn points by upgrading buildings. If you have buildings ready to upgrade, today is the day to do it. Save your radar missions for tomorrow (Day 3) — they score points then, not today. Tip: open any Survivor cards you\'ve been saving all week — they score today. Use the Secretary of Development feature when you start a build — it speeds things up, but the queue fills fast today so get in early.',
+    3: 'Today is Age of Science day — you earn points by doing research (the research lab in your base). Queue up research and use speedups today. Radar missions also score today, so run those too. Tip: open any drone component chests you have — they score today. Use your Valor points today if you have them — they score big points. Get in the Secretary of Science queue before reset so you\'re ready to chain research right after.',
+    4: 'Today is Train Heroes day — you earn points by leveling up your heroes. Use any hero XP items or recruit tickets you\'ve been saving. Save your radar missions for tomorrow (Day 5) — they score points then, not today. Tip: use your skill medals today — everyone has them and they score points. Don\'t leave them sitting there.',
+    5: 'Today is Total Mobilization day — the best day of the week. Building upgrades, research, AND troop training all earn points. Do as much as you can today. Radar missions also score today, so run those too. Tip: train as many troops as you can today — that\'s the main event. All speedups score today so use them.',
+    6: 'Today is Enemy Buster day — you earn points by fighting enemies. Attack infected zones and enemy bases. Radar missions don\'t score today, but you don\'t need to save them either. Tip: review your alliance duel scoring theme so you know exactly what counts today. Speedups also score today independently.',
+    7: 'Today is the weekly reset — no alliance duel today. Collect your weekly rewards and get ready for next week. Save your radar missions for tomorrow (Day 1) — they\'ll score points then. Tip: send your troops out gathering before reset on long tasks and call them back after reset — you\'ll get Day 1 gathering points.',
   }
   return advice[day] ?? "Check your in-game calendar for today's event."
 }
