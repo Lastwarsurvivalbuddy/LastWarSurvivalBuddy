@@ -9,6 +9,7 @@ import PackScanner from '@/components/PackScanner'
 import TeachBuddy from '@/components/TeachBuddy'
 import ServerPulse from '@/components/ServerPulse'
 import BattleReportAnalyzer from '@/components/BattleReportAnalyzer'
+import WarfighterBanner from '@/components/WarfighterBanner'
 import {
   RANK_BUCKET_LABELS,
   SQUAD_POWER_TIER_LABELS,
@@ -253,6 +254,9 @@ export default function Dashboard() {
   // ─── DASHBOARD ───
   return (
     <div className="min-h-screen bg-zinc-950 text-white">
+
+      {/* ── Warfighter mode banner (Boyd only — renders when mc_warfighter cookie is set) ── */}
+      <WarfighterBanner />
 
       {/* ── Top nav bar ── */}
       <header className="border-b border-zinc-800/80 bg-zinc-950/95 sticky top-0 z-20 backdrop-blur-sm">
