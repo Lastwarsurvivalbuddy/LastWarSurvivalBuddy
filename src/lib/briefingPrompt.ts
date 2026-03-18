@@ -5,8 +5,9 @@
 // Updated: March 17, 2026 (session 28) — radar task day guidance added
 // Updated: March 17, 2026 (session 30) — supplemental Alliance Duel scoring tips added per day
 // Updated: March 17, 2026 (session 38) — use server_day only, not computed_server_day (runs ahead of reset)
+// Updated: March 18, 2026 (session 39) — server_day removed entirely (no auto-increment, irrelevant to advice)
 
-// ─── Duel day — aligned to duel reset ─────────────────────────────────────────
+// ─── Duel day — aligned to duel reset ────────────────────────────────────────
 function getDuelDay(): { day: number; name: string } {
   const duelDays: Record<number, string> = {
     1: 'Radar Training',
@@ -25,7 +26,7 @@ function getDuelDay(): { day: number; name: string } {
   return { day, name: duelDays[day] ?? 'Unknown' }
 }
 
-// ─── Duel day advice ───────────────────────────────────────────────────────────
+// ─── Duel day advice ──────────────────────────────────────────────────────────
 function getDuelAdvice(day: number): string {
   const advice: Record<number, string> = {
     1: 'Duel Day 1 (Radar Training) — radar tasks score VS points today: run them. Save drone chip chests. Align stamina use with Drone Boost Arms Race phase if active. Don\'t let radar tasks hit cap or you stop accruing. Advanced Scoring Tips to maximize Alliance Duel: review your alliance duel scoring theme. Open drone chip chests today — they score. If you sent gathering squads out before reset, call them back now for Day 1 gathering points. Don\'t let your radar task queue fill up or accrual stops.',
@@ -39,7 +40,7 @@ function getDuelAdvice(day: number): string {
   return advice[day] ?? "Check in-game calendar for today's duel day."
 }
 
-// ─── Beginner duel advice ──────────────────────────────────────────────────────
+// ─── Beginner duel advice ─────────────────────────────────────────────────────
 function getDuelAdviceBeginner(day: number): string {
   const advice: Record<number, string> = {
     1: 'Today is Radar Training day — radar missions score alliance points today, so run them. The radar tower is in your base. Don\'t let your radar tasks fill up or you\'ll stop getting new ones. Tip: open any drone chests you have saved — they score today too. If you sent troops out gathering before reset, call them back now to get gathering points for today.',
@@ -53,7 +54,7 @@ function getDuelAdviceBeginner(day: number): string {
   return advice[day] ?? "Check your in-game calendar for today's event."
 }
 
-// ─── Spend tier label ──────────────────────────────────────────────────────────
+// ─── Spend tier label ─────────────────────────────────────────────────────────
 function getSpendLabel(spendTier: string): string {
   const map: Record<string, string> = {
     f2p: 'F2P',
@@ -66,14 +67,11 @@ function getSpendLabel(spendTier: string): string {
   return map[spendTier] ?? spendTier
 }
 
-// ─── Main export ───────────────────────────────────────────────────────────────
+// ─── Main export ──────────────────────────────────────────────────────────────
 export async function buildBriefingPrompt(profile: Record<string, unknown>): Promise<{
   systemPrompt: string
   userPrompt: string
 }> {
-  // Use server_day only — computed_server_day increments ahead of the actual reset
-  // and will show tomorrow's day until reset actually fires at 2am UTC
-  const serverDay = Number(profile.server_day ?? 1)
   const hqLevel = Number(profile.hq_level ?? 1)
   const season = Number(profile.season ?? 0)
   const spendTier = String(profile.spend_style ?? profile.spend_tier ?? 'f2p')
@@ -92,7 +90,7 @@ export async function buildBriefingPrompt(profile: Record<string, unknown>): Pro
   const duelAdvice = beginnerMode ? getDuelAdviceBeginner(duel.day) : getDuelAdvice(duel.day)
   const spendLabel = getSpendLabel(spendTier)
 
-  // ── Standard mode prompt ─────────────────────────────────────────────────────
+  // ── Standard mode prompt ────────────────────────────────────────────────────
   const standardSystemPrompt = `You are Last War: Survival Buddy — a tactical AI coach for Last War: Survival. You are generating a Daily Briefing Card for one specific player.
 
 STRICT RULES — violations destroy the product:
@@ -106,8 +104,9 @@ STRICT RULES — violations destroy the product:
 - Be direct, specific, and honest. If you don't have data for something, don't say it.
 
 OUTPUT FORMAT — use exactly this structure, no deviations:
+
 SITUATION
-[One sentence: server day, today's duel day and name, one honest observation about this player's current situation]
+[One sentence: today's duel day and name, one honest observation about this player's current situation]
 
 TOP 3 MOVES
 • [Action grounded in duel day context — include radar task guidance if relevant today]
@@ -119,7 +118,7 @@ WATCH OUT
 
 Tone: direct, no fluff, no hype. Coach voice.`
 
-  // ── Beginner mode prompt ─────────────────────────────────────────────────────
+  // ── Beginner mode prompt ────────────────────────────────────────────────────
   const beginnerSystemPrompt = `You are Last War: Survival Buddy — a friendly guide for players who are new to Last War: Survival. You are generating a Daily Briefing Card for a beginner player.
 
 STRICT RULES — violations destroy the product:
@@ -139,6 +138,7 @@ BEGINNER TONE RULES:
 - One clear priority first, then 2 supporting actions. Don't overwhelm.
 
 OUTPUT FORMAT — use exactly this structure, no deviations:
+
 SITUATION
 [One friendly sentence: what day it is, what's happening today in the game, and one encouraging observation about where this player is]
 
@@ -158,7 +158,7 @@ Tone: friendly, clear, encouraging. Like a helpful teammate, not a drill sergean
 
 PLAYER PROFILE:
 - Commander: ${commanderTag} ${allianceName}
-- Server: ${serverNumber} | Server Day: ${serverDay} | Season: ${season}
+- Server: ${serverNumber} | Season: ${season}
 - HQ: ${hqLevel} | Troop Type: ${troopType} | Troop Tier: ${troopTier}
 - Squad Power: ${squadPowerTier} | Rank: ${rankBucket} | Kill Tier: ${killTier}
 - Playstyle: ${playstyle} | Spend: ${spendLabel}
@@ -167,7 +167,10 @@ PLAYER PROFILE:
 TODAY'S DUEL CONTEXT:
 - Today is Duel Day ${duel.day} — ${duel.name}
 - ${duelAdvice}
-- Arms Race: 6 phases, random daily order. ${beginnerMode ? 'Tell the player to open their in-game calendar to see which Arms Race phase is active today, and try to match their duel actions to it.' : 'Player checks in-game calendar. 1 swap per day. Double-dip Duel actions with matching Arms Race phase.'}
+- Arms Race: 6 phases, random daily order. ${beginnerMode
+    ? 'Tell the player to open their in-game calendar to see which Arms Race phase is active today, and try to match their duel actions to it.'
+    : 'Player checks in-game calendar. 1 swap per day. Double-dip Duel actions with matching Arms Race phase.'
+  }
 
 Generate the briefing card now. Stay strictly within the data provided above.`
 
