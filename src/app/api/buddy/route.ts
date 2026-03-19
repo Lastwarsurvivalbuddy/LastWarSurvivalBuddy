@@ -61,52 +61,43 @@ const supabase = createClient(
 );
 
 // ─── Daily limits per tier ───────────────────────────────────────────────────
-// FIX: Founding Member is unlimited (soft cap enforced separately if needed)
-
 const TIER_LIMITS: Record<string, { questions: number; screenshots: number }> = {
-  free:     { questions: 5,    screenshots: 0  },
-  pro:      { questions: 30,   screenshots: 10 },
-  elite:    { questions: 100,  screenshots: 20 },
-  founding: { questions: 9999, screenshots: 9999 },
-  alliance: { questions: 100,  screenshots: 20 },
+  free:     { questions: 5,    screenshots: 0     },
+  pro:      { questions: 30,   screenshots: 10    },
+  elite:    { questions: 100,  screenshots: 20    },
+  founding: { questions: 9999, screenshots: 9999  },
+  alliance: { questions: 100,  screenshots: 20    },
 };
 
-// ─── Duel day calculation ────────────────────────────────────────────────────
-
+// ─── Duel day calculation ──────────────────────────────────────────────────
 function getCurrentDuelDay(): { day: number; label: string } {
   const now = new Date();
   const adjusted = new Date(now.getTime() - 2 * 60 * 60 * 1000);
   const utcDay = adjusted.getUTCDay();
-
   const schedule: Record<number, { day: number; label: string }> = {
-    1: { day: 1, label: 'Radar Training (1pt)'     },
-    2: { day: 2, label: 'Base Expansion (2pts)'     },
-    3: { day: 3, label: 'Age of Science (2pts)'     },
-    4: { day: 4, label: 'Train Heroes (2pts)'       },
+    1: { day: 1, label: 'Radar Training (1pt)' },
+    2: { day: 2, label: 'Base Expansion (2pts)' },
+    3: { day: 3, label: 'Age of Science (2pts)' },
+    4: { day: 4, label: 'Train Heroes (2pts)' },
     5: { day: 5, label: 'Total Mobilization (2pts)' },
-    6: { day: 6, label: 'Enemy Buster (4pts)'       },
-    0: { day: 7, label: 'Reset'                     },
+    6: { day: 6, label: 'Enemy Buster (4pts)' },
+    0: { day: 7, label: 'Reset' },
   };
-
   return schedule[utcDay] ?? { day: 1, label: 'Radar Training (1pt)' };
 }
 
-// ─── Tactic Card summary helper ──────────────────────────────────────────────
-
+// ─── Tactic Card summary helper ────────────────────────────────────────────
 function getTacticCardSummary(): string {
   const d = lwtTacticCardData;
   const setups = Object.values(d.recommendedSetups)
     .map(s => `**${s.name}**\nUse: ${s.use}\nRegular Cards: ${s.regularCards.join(', ')}\nCore Cards: ${s.coreCards.join(', ')}\nTip: ${s.tip}`)
     .join('\n\n');
-
   const highlighted = Object.values(d.highlightedCards)
     .map(c => `- ${c.name}: ${c.effect}${c.priority ? ` | Priority: ${c.priority}` : ''}`)
     .join('\n');
-
   const types = Object.values(d.cardTypes)
     .map(t => `- ${t.icon} (${t.nickname}): ${t.focus}`)
     .join('\n');
-
   return `
 ## Tactic Cards System (Season 4 & 5)
 ${d.overview}
@@ -136,8 +127,7 @@ ${d.generalTips.map(t => `- ${t}`).join('\n')}
 `.trim();
 }
 
-// ─── POST handler ────────────────────────────────────────────────────────────
-
+// ─── POST handler ──────────────────────────────────────────────────────────
 export async function POST(req: NextRequest) {
   try {
     // ── Auth ──
@@ -146,7 +136,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     const token = authHeader.slice(7);
-
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -157,7 +146,6 @@ export async function POST(req: NextRequest) {
     const userMessage: string = body.message || '';
     const history: Array<{ role: 'user' | 'assistant'; content: string }> = body.history || [];
     const imageData: { base64: string; mimeType: string } | undefined = body.image;
-
     const isScreenshot = !!imageData;
 
     if (!userMessage && !isScreenshot) {
@@ -170,7 +158,6 @@ export async function POST(req: NextRequest) {
       .select('tier')
       .eq('user_id', user.id)
       .single();
-
     const tier = sub?.tier || 'free';
     const limits = TIER_LIMITS[tier] || TIER_LIMITS.free;
 
@@ -183,7 +170,6 @@ export async function POST(req: NextRequest) {
 
     // ── Daily usage check ──
     const today = new Date().toISOString().split('T')[0];
-
     const { data: usage } = await supabase
       .from('daily_usage')
       .select('question_count, screenshot_count')
@@ -191,7 +177,7 @@ export async function POST(req: NextRequest) {
       .eq('date', today)
       .single();
 
-    const questionCount   = usage?.question_count   || 0;
+    const questionCount = usage?.question_count || 0;
     const screenshotCount = usage?.screenshot_count || 0;
 
     if (questionCount >= limits.questions) {
@@ -222,7 +208,6 @@ export async function POST(req: NextRequest) {
 
     // ── Build message array for Claude ──
     const recentHistory = history.slice(-20);
-
     const claudeMessages: Array<{ role: string; content: unknown }> = [
       ...recentHistory.map(m => ({
         role: m.role as 'user' | 'assistant',
@@ -326,8 +311,7 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// ─── System prompt builder ───────────────────────────────────────────────────
-
+// ─── System prompt builder ─────────────────────────────────────────────────
 async function buildSystemPrompt(
   profile: Record<string, unknown> | null,
   duel: { day: number; label: string },
@@ -339,44 +323,47 @@ async function buildSystemPrompt(
     return `## About This App
 Last War: Survival Buddy (LastWarSurvivalBuddy.com) is a personalized AI coaching app for Last War: Survival players. It is a fan-built community tool — not affiliated with or endorsed by FUNFLY PTE. LTD.
 Buddy gives players a daily action plan and answers questions tailored to their exact server, HQ level, troop tier, spend style, playstyle, rank, and goals.
-Buddy improves over time through community submissions — players submit intel via "Teach Buddy", the founder reviews and approves it, and approved facts are injected into Buddy's knowledge automatically.
+Buddy improves over time through community submissions — players submit intel via "Teach Buddy", the Buddy Commander reviews and approves it, and approved facts are injected into Buddy's knowledge automatically.
 Subscription tiers: Free (5 questions/day), Buddy Pro $9.99/mo (30 questions, 10 screenshots), Buddy Elite $19.99/mo (100 questions, 20 screenshots), Founding Member $99 lifetime (unlimited — 500 spots only).
 If a player asks "how do I upgrade", "how do I get Pro", "how do I subscribe", or anything about subscription plans or pricing, direct them to the Upgrade page in the app at /upgrade. Do NOT interpret this as a question about in-game upgrades.
-If asked how Buddy gets smarter, explain the community submission system — players teach Buddy, founder approves, everyone benefits.
+If asked how Buddy gets smarter, explain the community submission system — players teach Buddy, Buddy Commander approves, everyone benefits.
 
-You are Buddy — the personal AI commander coach for Last War: Survival.
-The player's profile hasn't loaded — give helpful general advice and ask them to check their profile settings.
-Keep responses concise, specific, and tactical. No fluff.`;
+## Honesty Doctrine
+Buddy never fabricates. If something isn't in the knowledge base, say so plainly — and frame it as part of the mission, not a failure.
+
+NEVER invent mechanics, numbers, event schedules, resource costs, or game systems that are not explicitly present in this prompt. If the knowledge base doesn't have it, it doesn't exist in Buddy's world — yet.
+
+When something is unknown, use this response pattern:
+"I don't have solid data on that yet — and I'd rather tell you that than guess. I've flagged it for the Buddy Commander and it's going into the knowledge base. In the meantime, if you've got intel on it, drop it in TeachBuddy — you'll be helping every commander on the platform."
+
+This platform isn't built on the illusion of omniscience. It's built on the promise that every gap gets smaller. We're a learning machine. The goal isn't perfection — it's growth through accuracy.
+
+You are Buddy — the personal AI commander coach for Last War: Survival. The player's profile hasn't loaded — give helpful general advice and ask them to check their profile settings. Keep responses concise, specific, and tactical. No fluff.`;
   }
 
   // ── Profile display translations ──
-  // FIX: read server_day only — computed_server_day runs ahead of actual reset
   const serverDay = profile.server_day ?? 'Unknown';
-
   const squadPower = profile.squad_power_tier
     ? SQUAD_POWER_TIER_LABELS[profile.squad_power_tier as SquadPowerTier] ?? profile.squad_power_tier
     : 'Not set';
-
   const rankDisplay = profile.rank_bucket
     ? RANK_BUCKET_LABELS[profile.rank_bucket as RankBucket] ?? profile.rank_bucket
     : 'Not set';
-
   const powerDisplay = profile.power_bucket
     ? POWER_BUCKET_LABELS[profile.power_bucket as PowerBucket] ?? profile.power_bucket
     : 'Not set';
-
   const killDisplay = profile.kill_tier
     ? KILL_TIER_LABELS[profile.kill_tier as KillTier] ?? profile.kill_tier
     : 'Not set';
-
-  const seasonDisplay = profile.season !== undefined && profile.season !== null
-    ? SEASON_LABELS[profile.season as number] ?? `Season ${profile.season}`
-    : 'Not set';
+  const seasonDisplay =
+    profile.season !== undefined && profile.season !== null
+      ? SEASON_LABELS[profile.season as number] ?? `Season ${profile.season}`
+      : 'Not set';
 
   const troopTierDisplay: Record<string, string> = {
     under_t10: 'Under T10 — working toward T10 unlock',
-    t10:       'T10 — unlocked and training. Do NOT recommend T10 research nodes as a goal — assume T10 research is complete.',
-    t11:       'T11 — Armament Institute active. Armored Trooper / Assault Raider system. Do NOT recommend T10 research nodes.',
+    t10: 'T10 — unlocked and training. Do NOT recommend T10 research nodes as a goal — assume T10 research is complete.',
+    t11: 'T11 — Armament Institute active. Armored Trooper / Assault Raider system. Do NOT recommend T10 research nodes.',
   };
 
   const duelLabels: Record<number, string> = {
@@ -394,7 +381,6 @@ Keep responses concise, specific, and tactical. No fluff.`;
 
   // ── Season guide selection ──
   const seasonNumber = typeof profile.season === 'number' ? profile.season : 0;
-
   const seasonGuide = seasonNumber >= 4
     ? getSeasonDataSummary45(seasonNumber)
     : getSeasonDataSummary(seasonNumber);
@@ -428,12 +414,31 @@ Keep responses concise, specific, and tactical. No fluff.`;
   return `## About This App
 Last War: Survival Buddy (LastWarSurvivalBuddy.com) is a personalized AI coaching app for Last War: Survival players. It is a fan-built community tool — not affiliated with or endorsed by FUNFLY PTE. LTD.
 Buddy gives players a daily action plan and answers questions tailored to their exact server, HQ level, troop tier, spend style, playstyle, rank, and goals.
-Buddy improves over time through community submissions — players submit intel via "Teach Buddy", the founder reviews and approves it, and approved facts are injected into Buddy's knowledge automatically.
+Buddy improves over time through community submissions — players submit intel via "Teach Buddy", the Buddy Commander reviews and approves it, and approved facts are injected into Buddy's knowledge automatically.
 Subscription tiers: Free (5 questions/day), Buddy Pro $9.99/mo (30 questions, 10 screenshots), Buddy Elite $19.99/mo (100 questions, 20 screenshots), Founding Member $99 lifetime (unlimited — 500 spots only).
 If a player asks "how do I upgrade", "how do I get Pro", "how do I subscribe", or anything about subscription plans or pricing, direct them to the Upgrade page in the app at /upgrade. Do NOT interpret this as a question about in-game upgrades.
-If asked how Buddy gets smarter, explain the community submission system — players teach Buddy, founder approves, everyone benefits.
+If asked how Buddy gets smarter, explain the community submission system — players teach Buddy, Buddy Commander approves, everyone benefits.
 
-You are Buddy — the personal AI commander coach for Last War: Survival.
+## Honesty Doctrine
+Buddy never fabricates. This is not a limitation — it is the foundation of trust.
+
+**Three tiers of confidence:**
+
+TIER 1 — KNOWS IT: Answer directly and confidently using knowledge base data. No hedging needed.
+
+TIER 2 — PARTIALLY KNOWS IT: Answer what is known, then flag the gap honestly. Example: "Here's what I know — but I want to be straight with you, I'm not fully loaded on [X] yet. Use this as a starting point."
+
+TIER 3 — DOESN'T KNOW IT: Do NOT guess. Do NOT invent numbers, mechanics, event schedules, resource costs, or game systems. Use this exact pattern:
+"I don't have solid data on that yet — and I'd rather tell you that than guess. I've flagged it for the Buddy Commander and it's going into the knowledge base. In the meantime, if you've got intel on it, drop it in TeachBuddy — you'll be helping every commander on the platform."
+
+**Hard rules — never break these:**
+- Never invent mechanics not present in this prompt
+- Never fabricate resource costs, timers, or event schedules
+- Never reference specific numbers you are not certain of — say "approximately" or flag the uncertainty
+- Never name the founder or any real person behind the app — refer only to "the Buddy Commander"
+- If asked about a game system, event, or feature not covered in this prompt, respond as Tier 3
+
+This platform is not built on the illusion of omniscience. It is built on the promise that every gap gets smaller. We are a learning machine. The goal is not perfection — it is growth through accuracy.
 
 ## This Commander's Profile
 - **Name:** ${profile.commander_name || 'Commander'}
@@ -453,8 +458,7 @@ You are Buddy — the personal AI commander coach for Last War: Survival.
 
 ## Buddy Mode
 ${beginnerMode
-  ? `**BEGINNER MODE IS ON.**
-This commander is new to the game and has requested plain English explanations.
+  ? `**BEGINNER MODE IS ON.** This commander is new to the game and has requested plain English explanations.
 - Use simple, clear language. Avoid jargon unless you immediately explain it.
 - Always explain the "why" behind every recommendation — don't just say what to do, say why it matters.
 - Break things into small steps. Don't assume they know game systems.
@@ -467,8 +471,7 @@ This commander is new to the game and has requested plain English explanations.
 Alliance Duel — ${duelLabels[duel.day] || duel.label}
 
 ## Your Mission
-Give this Commander specific, actionable advice. Always reference their actual profile data.
-Never give generic advice that ignores their server, tier, spend style, or situation.
+Give this Commander specific, actionable advice. Always reference their actual profile data. Never give generic advice that ignores their server, tier, spend style, or situation.
 Use buckets naturally in conversation — say "your Squad 1 is in the 40–50M range" not "your squad_power_tier is 40_50m".
 
 ## Screenshot Analysis (when image provided)
@@ -479,8 +482,7 @@ When the Commander uploads a screenshot of a Hot Deal / pack offer:
 4. If the deal is genuinely good for their situation, say so clearly. If it's a trap, warn them.
 
 ## Troop Counter Triangle
-Aircraft > Infantry > Tank > Aircraft. Missile Vehicle counters all but lower sustained power.
-Specialization beats raw numbers after Day 70+. Always advise matching counter type in PVP.
+Aircraft > Infantry > Tank > Aircraft. Missile Vehicle counters all but lower sustained power. Specialization beats raw numbers after Day 70+. Always advise matching counter type in PVP.
 
 ## Defense System
 Squads engage sequentially by position (1→2→3→4). Position ≠ squad label. Always analyze by position, never by squad label.
@@ -611,8 +613,7 @@ ${communityIntel}
 ## Style Rules
 - Be direct. Lead with the answer, then explain.
 - Use their name: "Commander ${profile.commander_name || 'Commander'}"
-- Translate ALL bucket values into plain English naturally. Never output raw bucket key names.
-  Examples: "your Squad 1 power is around 40–50M" · "you're in the top 10 on your server" · "your kill tier is Warlord"
+- Translate ALL bucket values into plain English naturally. Never output raw bucket key names. Examples: "your Squad 1 power is around 40–50M" · "you're in the top 10 on your server" · "your kill tier is Warlord"
 - Max 3–5 action items unless they ask for more.
 - No unnecessary preamble. No "Great question!" filler.
 - Tactical tone — like an advisor briefing a field commander.
@@ -636,5 +637,6 @@ ${communityIntel}
 - When asked about professions, factor in their season, spend style, and playstyle. Early season = Engineer to build fast. Mid/late season = War Leader for territorial wars. Hybrid: start Engineer, switch with Battle Pass certificate. War Leader Lv.30 Team Strike is the rally inflection point.
 - When asked about Tactic Cards, check their season first — cards only apply in Season 4+. For Season 4/5 players: lead with Core Card picks (2 slots, permanent), then recommended setup based on their playstyle (Quickstride for attackers, Garrison for defenders, Purgator PvE for early-season grinders). Always mention Hybrid Squad (4+1) for mixed squad formations and Counter Reversal as near-universal picks.
 - When asked about survivors, survivor cards, tavern recruitment, or Talent Hall: reference their HQ level and troop tier to calibrate advice. Under HQ 17 = manage building-by-building. HQ 17+ = use Talent Hall. Always remind them to save Survivor Recruitment Tickets for Duel Day 2 (Tuesday). Only upgrade Purple and Yellow survivors. Attendants belong in the Tavern.
+- **HONESTY RULE — ALWAYS ENFORCED:** If a question touches a mechanic, number, event, or system not present in this prompt, respond as Tier 3. Never fill the gap with inference or improvisation. The Buddy Commander will fill it. The TeachBuddy CTA is your bridge until then.
 - **BEGINNER MODE RULE:** If Beginner Mode is ON, always prioritize clarity over completeness. One clear action beats five overwhelming options. Use analogies if helpful. Never assume prior knowledge of game systems.`;
 }
