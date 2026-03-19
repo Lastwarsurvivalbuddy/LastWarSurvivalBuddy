@@ -14,15 +14,13 @@ interface Message {
 
 const SUGGESTED_PROMPTS = [
   "What should I focus on today?",
-  "Is my defense setup optimal?",
-  "How do I maximize Arms Race points?",
-  "What's the best use of my speedups right now?",
-  "Help me plan for the next Kill Event",
+  "Is this pack worth buying?",
+  "How do I score more in Arms Race?",
+  "How do I get stronger faster?",
 ];
 
 export default function BuddyPage() {
   const router = useRouter();
-
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -74,6 +72,7 @@ export default function BuddyPage() {
       .select('tier')
       .eq('user_id', session.user.id)
       .single();
+
     if (sub) setTier(sub.tier);
 
     const today = new Date().toISOString().split('T')[0];
@@ -84,9 +83,7 @@ export default function BuddyPage() {
       .eq('date', today)
       .single();
 
-    const limits: Record<string, number> = {
-      free: 5, pro: 30, elite: 100, founding: 20, alliance: 100
-    };
+    const limits: Record<string, number> = { free: 5, pro: 30, elite: 100, founding: 20, alliance: 100 };
     const userTier = sub?.tier || 'free';
     const userLimit = limits[userTier] || 5;
     const used = usage?.question_count || 0;
@@ -109,7 +106,6 @@ export default function BuddyPage() {
       alert('Please upload an image file (PNG, JPG, WEBP).');
       return;
     }
-
     if (file.size > 5 * 1024 * 1024) {
       alert('Image must be under 5MB.');
       return;
@@ -133,7 +129,6 @@ export default function BuddyPage() {
   async function sendMessage() {
     const trimmed = input.trim();
     if ((!trimmed && !pendingImage) || isLoading) return;
-
     if (dailyLimit && dailyLimit.used >= dailyLimit.limit) {
       return;
     }
@@ -155,7 +150,10 @@ export default function BuddyPage() {
 
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) { router.push('/signin'); return; }
+      if (!session) {
+        router.push('/signin');
+        return;
+      }
 
       const body: Record<string, unknown> = {
         message: userMessage.content,
@@ -205,7 +203,6 @@ export default function BuddyPage() {
         content: data.reply,
         timestamp: new Date(),
       }]);
-
       setDailyLimit(prev => prev ? { ...prev, used: prev.used + 1 } : prev);
 
     } catch {
@@ -266,7 +263,10 @@ export default function BuddyPage() {
                 <button
                   key={prompt}
                   className="prompt-chip"
-                  onClick={() => setInput(prompt)}
+                  onClick={() => {
+                    setInput(prompt);
+                    setTimeout(() => textareaRef.current?.focus(), 50);
+                  }}
                 >
                   {prompt}
                 </button>
@@ -296,7 +296,6 @@ export default function BuddyPage() {
                 </div>
               </div>
             ))}
-
             {isTyping && (
               <div className="message-row assistant">
                 <div className="avatar assistant-avatar">🎖️</div>
@@ -314,7 +313,6 @@ export default function BuddyPage() {
 
       {/* Input area */}
       <footer className="input-area">
-
         {/* ── Limit banner — free tier hits wall ── */}
         {isAtLimit && (
           <div className="limit-banner">
@@ -492,29 +490,36 @@ export default function BuddyPage() {
         }
         .suggested-prompts {
           display: flex;
-          flex-direction: column;
+          flex-wrap: wrap;
           gap: 8px;
           width: 100%;
-          max-width: 420px;
+          max-width: 480px;
+          justify-content: center;
         }
         .prompt-chip {
           background: #0d1017;
           border: 1px solid #1e2535;
           color: #8a9ab5;
-          padding: 10px 16px;
-          border-radius: 6px;
+          padding: 9px 16px;
+          border-radius: 20px;
           font-size: 13px;
           font-family: inherit;
           cursor: pointer;
-          text-align: left;
-          transition: border-color 0.2s, color 0.2s;
+          text-align: center;
+          transition: border-color 0.2s, color 0.2s, background 0.2s;
           letter-spacing: 0.01em;
+          white-space: nowrap;
         }
         .prompt-chip:hover {
           border-color: #c9b87a;
           color: #c9b87a;
+          background: #0f1420;
         }
-        .messages-list { display: flex; flex-direction: column; gap: 18px; }
+        .messages-list {
+          display: flex;
+          flex-direction: column;
+          gap: 18px;
+        }
         .message-row {
           display: flex;
           gap: 10px;
@@ -532,7 +537,10 @@ export default function BuddyPage() {
           flex-shrink: 0;
           margin-top: 2px;
         }
-        .assistant-avatar { background: #12182a; border: 1px solid #1e2535; }
+        .assistant-avatar {
+          background: #12182a;
+          border: 1px solid #1e2535;
+        }
         .bubble {
           max-width: 78%;
           border-radius: 12px;
@@ -637,10 +645,7 @@ export default function BuddyPage() {
           border-radius: 8px;
           padding: 8px 12px;
         }
-        .pending-thumb-wrap {
-          position: relative;
-          flex-shrink: 0;
-        }
+        .pending-thumb-wrap { position: relative; flex-shrink: 0; }
         .pending-thumb {
           width: 52px;
           height: 52px;
@@ -672,10 +677,7 @@ export default function BuddyPage() {
           line-height: 1.4;
           font-style: italic;
         }
-        .screenshot-row {
-          display: flex;
-          align-items: center;
-        }
+        .screenshot-row { display: flex; align-items: center; }
         .screenshot-btn {
           background: #0d1017;
           border: 1px dashed #2a3550;
@@ -691,14 +693,8 @@ export default function BuddyPage() {
           gap: 6px;
           transition: border-color 0.2s, color 0.2s;
         }
-        .screenshot-btn:hover:not(:disabled) {
-          border-color: #c9b87a;
-          color: #c9b87a;
-        }
-        .screenshot-btn:disabled {
-          opacity: 0.4;
-          cursor: not-allowed;
-        }
+        .screenshot-btn:hover:not(:disabled) { border-color: #c9b87a; color: #c9b87a; }
+        .screenshot-btn:disabled { opacity: 0.4; cursor: not-allowed; }
         .pro-badge {
           background: #c9b87a;
           color: #0a0c10;
@@ -764,6 +760,8 @@ export default function BuddyPage() {
           .input-area { padding: 10px 12px 14px; }
           .bubble { max-width: 90%; font-size: 13px; }
           .empty-heading { font-size: 18px; }
+          .suggested-prompts { gap: 6px; }
+          .prompt-chip { font-size: 12px; padding: 8px 14px; }
         }
       `}</style>
     </div>
