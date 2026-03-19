@@ -96,10 +96,12 @@ function troopTypeLabel(t: string | null): string {
 export default function CommanderCardPage() {
   const router = useRouter();
   const cardRef = useRef<HTMLDivElement>(null);
+  const nameRef = useRef<HTMLDivElement>(null);
   const [data, setData] = useState<CommanderData | null>(null);
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [nameFontSize, setNameFontSize] = useState(32);
 
   useEffect(() => {
     (async () => {
@@ -114,6 +116,24 @@ export default function CommanderCardPage() {
       setLoading(false);
     })();
   }, [router]);
+
+  // Auto-scale name font size to fit card width
+  useEffect(() => {
+    if (!nameRef.current || !data?.commander_name) return;
+    const MAX_SIZE = 32;
+    const MIN_SIZE = 14;
+    const AVAILABLE_WIDTH = 260; // 360px card - 20px left pad - 80px right (badge area)
+
+    let size = MAX_SIZE;
+    nameRef.current.style.fontSize = `${size}px`;
+
+    while (nameRef.current.scrollWidth > AVAILABLE_WIDTH && size > MIN_SIZE) {
+      size -= 0.5;
+      nameRef.current.style.fontSize = `${size}px`;
+    }
+
+    setNameFontSize(size);
+  }, [data?.commander_name]);
 
 const exportCard = async (format: 'png' | 'jpg') => {
   if (!cardRef.current || exporting) return;
@@ -234,7 +254,19 @@ const exportCard = async (format: 'png' | 'jpg') => {
 
         {/* Commander name */}
         <div style={{ position: 'relative', zIndex: 2, padding: '28px 20px 0 20px' }}>
-          <div style={{ color: '#f5f5f5', fontSize: '32px', fontWeight: 800, letterSpacing: '0.03em', lineHeight: 1, textTransform: 'uppercase' }}>
+          <div
+            ref={nameRef}
+            style={{
+              color: '#f5f5f5',
+              fontSize: `${nameFontSize}px`,
+              fontWeight: 800,
+              letterSpacing: '0.03em',
+              lineHeight: 1,
+              textTransform: 'uppercase',
+              whiteSpace: 'nowrap',
+              overflow: 'visible',
+            }}
+          >
             {data.commander_name ?? 'COMMANDER'}
           </div>
           {alliance && (
