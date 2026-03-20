@@ -255,16 +255,17 @@ export default function DailyBriefing() {
   if (error) {
     return (
       <div className="rounded-xl border border-red-500/20 bg-zinc-900/80 p-5">
-        <div className="flex items-center gap-2 mb-3">
+        <div className="flex items-center justify-between mb-3">
           <span className="text-yellow-400 text-sm font-bold tracking-widest uppercase">Daily Briefing</span>
+          <button
+            onClick={handleRefresh}
+            title="Refresh briefing"
+            className="flex items-center gap-1 text-xs font-semibold text-yellow-500 hover:text-yellow-300 transition-colors border border-yellow-500/40 hover:border-yellow-400 rounded px-2 py-0.5"
+          >
+            ↺ Refresh
+          </button>
         </div>
         <p className="text-zinc-400 text-sm">{error}</p>
-        <button
-          onClick={fetchBriefing}
-          className="mt-3 text-xs text-yellow-400 hover:text-yellow-300 underline"
-        >
-          Try again
-        </button>
       </div>
     );
   }
