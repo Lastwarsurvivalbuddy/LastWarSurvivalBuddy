@@ -30,9 +30,9 @@ function getDuelDateString(): string {
 
 function parseBriefing(text: string): BriefingSection | null {
   try {
-    const situationMatch = text.match(/SITUATION\s*\n([\s\S]*?)(?=TOP 3 MOVES|$)/i);
-    const movesMatch = text.match(/TOP 3 MOVES\s*\n([\s\S]*?)(?=WATCH OUT|$)/i);
-    const watchMatch = text.match(/WATCH OUT\s*\n([\s\S]*?)$/i);
+    const situationMatch = text.match(/\*{0,2}SITUATION\*{0,2}\s*\n([\s\S]*?)(?=\*{0,2}TOP 3 MOVES|$)/i);
+    const movesMatch = text.match(/\*{0,2}TOP 3 MOVES\*{0,2}\s*\n([\s\S]*?)(?=\*{0,2}WATCH OUT|$)/i);
+    const watchMatch = text.match(/\*{0,2}WATCH OUT\*{0,2}\s*\n([\s\S]*?)$/i);
 
     if (!situationMatch && !movesMatch) return null;
 
