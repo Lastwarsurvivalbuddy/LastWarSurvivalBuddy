@@ -7,6 +7,7 @@
 // Updated: March 17, 2026 (session 38) — use server_day only, not computed_server_day (runs ahead of reset)
 // Updated: March 18, 2026 (session 39) — server_day removed entirely (not auto-incremented, irrelevant to advice)
 // Updated: March 18, 2026 (session 39) — Sec Sci queue timing tip moved from Day 3 to Day 2 (reset hasn't hit yet)
+// Updated: March 20, 2026 (session 48) — troop type stripped from training advice; hard rule added to never name troop type in training recs
 
 // ─── Duel day — aligned to duel reset ────────────────────────────────────────
 function getDuelDay(): { day: number; name: string } {
@@ -34,9 +35,9 @@ function getDuelAdvice(day: number): string {
     2: 'Duel Day 2 (Base Expansion) — open pre-wrapped buildings, use Legendary Trade Truck if available (200K pts), align construction with City Building Arms Race phase. Save radar tasks — they score on Day 3, not today. Advanced Scoring Tips to maximize Alliance Duel: review your alliance duel scoring theme. Save Survivor cards all week and open them today — they score on Day 2. Use the Secretary of Development queue whenever you kick off a build — it fills up fast on Day 2, so get in early after reset. Get into the Secretary of Science queue before reset tonight — missing the timing means losing your prime research chain position for tomorrow\'s Day 3 scoring window.',
     3: 'Duel Day 3 (Age of Science) — radar tasks score VS points today: run them. Use research speedups, click to collect pre-staged research, use Valor Badges. Align with Tech Research Arms Race phase if active. Advanced Scoring Tips to maximize Alliance Duel: review your alliance duel scoring theme. Open drone component chests today — they score. Use Valor points today — they score big. Research speedups and research completions also score. Clear completions, then chain new research using Valor points.',
     4: 'Duel Day 4 (Train Heroes) — use hero recruit tickets, spend UR/SSR shards if available, use Hero EXP, align with Hero Advancement Arms Race phase. Save radar tasks — they score on Day 5, not today. Advanced Scoring Tips to maximize Alliance Duel: review your alliance duel scoring theme. Use skill medals today — everyone has them, use them. Exclusive weapons and hero gear upgrades also score today. Don\'t sit on these resources.',
-    5: 'Duel Day 5 (Total Mobilization) — radar tasks score VS points today: run them. Best triple-dip day: construction + research + training all overlap Arms Race. Stack everything. Advanced Scoring Tips to maximize Alliance Duel: review your alliance duel scoring theme. All speedups score today. Overlord skill upgrades score — use them. Train troops aggressively — that is the primary scoring action today.',
+    5: 'Duel Day 5 (Total Mobilization) — radar tasks score VS points today: run them. Best triple-dip day: construction + research + training all overlap Arms Race. Stack everything. Advanced Scoring Tips to maximize Alliance Duel: review your alliance duel scoring theme. All speedups score today. Overlord skill upgrades score — use them. Fill your drill grounds and train troops aggressively — that is the primary scoring action today.',
     6: 'Duel Day 6 (Enemy Buster) — war day, 4 alliance pts. Use healing speedups today (only day they score). Coordinate kills on opponent server. Remove wall defense or shield. Radar tasks don\'t score VS today — no need to save them either. Advanced Scoring Tips to maximize Alliance Duel: review your alliance duel scoring theme. Speedups score independently today. Kill as many enemy troops as possible — that is the primary scoring action.',
-    7: 'Duel Day 7 (Reset) — no duel today. Claim rewards, queue upgrades, prep for Monday. Save radar tasks — they score VS points on Day 1 tomorrow. Advanced Scoring Tips to maximize Alliance Duel: review your alliance duel scoring theme. Send gathering squads out before reset on long tasks — call them back after reset for Day 1 gathering points.',
+    7: 'Duel Day 7 (Reset) — no duel today. Claim rewards, queue upgrades, prep for Monday. Save radar tasks — they score VS points on Day 1 tomorrow. Advanced Scoring Tips to maximize Alliance Duel: review your alliance duel scoring theme. Send gathering squads out before reset on long tasks and call them back after reset — you\'ll get Day 1 gathering points.',
   }
   return advice[day] ?? "Check in-game calendar for today's duel day."
 }
@@ -48,11 +49,21 @@ function getDuelAdviceBeginner(day: number): string {
     2: 'Today is Base Expansion day — you earn points by upgrading buildings. If you have buildings ready to upgrade, today is the day to do it. Save your radar missions for tomorrow (Day 3) — they score points then, not today. Tip: open any Survivor cards you\'ve been saving all week — they score today. Use the Secretary of Development feature when you start a build — it speeds things up, but the queue fills fast today so get in early. Before reset tonight, get into the Secretary of Science queue — that way you\'re first in line to chain research tomorrow on Day 3 when research scores points.',
     3: 'Today is Age of Science day — you earn points by doing research (the research lab in your base). Queue up research and use speedups today. Radar missions also score today, so run those too. Tip: open any drone component chests you have — they score today. Use your Valor points today if you have them — they score big points.',
     4: 'Today is Train Heroes day — you earn points by leveling up your heroes. Use any hero XP items or recruit tickets you\'ve been saving. Save your radar missions for tomorrow (Day 5) — they score points then, not today. Tip: use your skill medals today — everyone has them and they score points. Don\'t leave them sitting there.',
-    5: 'Today is Total Mobilization day — the best day of the week. Building upgrades, research, AND troop training all earn points. Do as much as you can today. Radar missions also score today, so run those too. Tip: train as many troops as you can today — that\'s the main event. All speedups score today so use them.',
+    5: 'Today is Total Mobilization day — the best day of the week. Building upgrades, research, AND troop training all earn points. Do as much as you can today. Radar missions also score today, so run those too. Tip: fill your drill grounds and train as many troops as you can today — that\'s the main event. All speedups score today so use them.',
     6: 'Today is Enemy Buster day — you earn points by fighting enemies. Attack infected zones and enemy bases. Radar missions don\'t score today, but you don\'t need to save them either. Tip: review your alliance duel scoring theme so you know exactly what counts today. Speedups also score today independently.',
     7: 'Today is the weekly reset — no alliance duel today. Collect your weekly rewards and get ready for next week. Save your radar missions for tomorrow (Day 1) — they\'ll score points then. Tip: send your troops out gathering before reset on long tasks and call them back after reset — you\'ll get Day 1 gathering points.',
   }
   return advice[day] ?? "Check your in-game calendar for today's event."
+}
+
+// ─── Troop tier label ─────────────────────────────────────────────────────────
+function getTroopTierLabel(troopTier: string): string {
+  const map: Record<string, string> = {
+    under_t10: 'under T10',
+    t10: 'T10',
+    t11: 'T11',
+  }
+  return map[troopTier] ?? troopTier
 }
 
 // ─── Spend tier label ─────────────────────────────────────────────────────────
@@ -78,6 +89,7 @@ export async function buildBriefingPrompt(profile: Record<string, unknown>): Pro
   const spendTier = String(profile.spend_style ?? profile.spend_tier ?? 'f2p')
   const troopType = String(profile.troop_type ?? 'unknown')
   const troopTier = String(profile.troop_tier ?? 'under_t10')
+  const troopTierLabel = getTroopTierLabel(troopTier)
   const playstyle = String(profile.playstyle ?? 'balanced')
   const rankBucket = String(profile.rank_bucket ?? 'not_top_200')
   const squadPowerTier = String(profile.squad_power_tier ?? 'under_10m')
@@ -91,7 +103,7 @@ export async function buildBriefingPrompt(profile: Record<string, unknown>): Pro
   const duelAdvice = beginnerMode ? getDuelAdviceBeginner(duel.day) : getDuelAdvice(duel.day)
   const spendLabel = getSpendLabel(spendTier)
 
-  // ── Standard mode prompt ────────────────────────────────────────────────────
+  // ── Standard mode prompt ──────────────────────────────────────────────────
   const standardSystemPrompt = `You are Last War: Survival Buddy — a tactical AI coach for Last War: Survival. You are generating a Daily Briefing Card for one specific player.
 
 STRICT RULES — violations destroy the product:
@@ -103,6 +115,7 @@ STRICT RULES — violations destroy the product:
 - Arms Race: tell the player to check their in-game calendar for today's phase and align Duel actions accordingly. That is all.
 - Keep advice grounded: HQ level, troop tier, troop type, duel day, spend tier, rank, kill tier. These are your only inputs.
 - Be direct, specific, and honest. If you don't have data for something, don't say it.
+- TROOP TRAINING RULE: When recommending troop training, NEVER name the troop type (aircraft, tank, missile). Always say "T[tier] troops" — e.g. "train T10 troops" or "fill your drill grounds with T11 troops". The player knows their type. Naming it reads as AI slop.
 
 OUTPUT FORMAT — use exactly this structure, no deviations:
 
@@ -119,7 +132,7 @@ WATCH OUT
 
 Tone: direct, no fluff, no hype. Coach voice.`
 
-  // ── Beginner mode prompt ────────────────────────────────────────────────────
+  // ── Beginner mode prompt ──────────────────────────────────────────────────
   const beginnerSystemPrompt = `You are Last War: Survival Buddy — a friendly guide for players who are new to Last War: Survival. You are generating a Daily Briefing Card for a beginner player.
 
 STRICT RULES — violations destroy the product:
@@ -129,6 +142,7 @@ STRICT RULES — violations destroy the product:
 - Do NOT fabricate timers, countdowns, or phase names.
 - Keep advice grounded: HQ level, troop tier, troop type, duel day, spend tier. These are your only inputs.
 - Be honest. If you don't have data for something, don't say it.
+- TROOP TRAINING RULE: When recommending troop training, NEVER name the troop type (aircraft, tank, missile). Always say "T[tier] troops" — e.g. "train T10 troops" or "fill your drill grounds". The player knows their type. Naming it reads as AI slop.
 
 BEGINNER TONE RULES:
 - Write like you're texting a friend who just started the game, not briefing a general.
@@ -160,7 +174,7 @@ Tone: friendly, clear, encouraging. Like a helpful teammate, not a drill sergean
 PLAYER PROFILE:
 - Commander: ${commanderTag} ${allianceName}
 - Server: ${serverNumber} | Season: ${season}
-- HQ: ${hqLevel} | Troop Type: ${troopType} | Troop Tier: ${troopTier}
+- HQ: ${hqLevel} | Troop Type: ${troopType} | Troop Tier: ${troopTierLabel}
 - Squad Power: ${squadPowerTier} | Rank: ${rankBucket} | Kill Tier: ${killTier}
 - Playstyle: ${playstyle} | Spend: ${spendLabel}
 - Beginner Mode: ${beginnerMode ? 'ON — use plain English, explain terms, be encouraging' : 'OFF — use tactical expert tone'}
@@ -168,9 +182,10 @@ PLAYER PROFILE:
 TODAY'S DUEL CONTEXT:
 - Today is Duel Day ${duel.day} — ${duel.name}
 - ${duelAdvice}
-- Arms Race: 6 phases, random daily order. ${beginnerMode
-    ? 'Tell the player to open their in-game calendar to see which Arms Race phase is active today, and try to match their duel actions to it.'
-    : 'Player checks in-game calendar. 1 swap per day. Double-dip Duel actions with matching Arms Race phase.'
+- Arms Race: 6 phases, random daily order. ${
+    beginnerMode
+      ? 'Tell the player to open their in-game calendar to see which Arms Race phase is active today, and try to match their duel actions to it.'
+      : 'Player checks in-game calendar. 1 swap per day. Double-dip Duel actions with matching Arms Race phase.'
   }
 
 Generate the briefing card now. Stay strictly within the data provided above.`
