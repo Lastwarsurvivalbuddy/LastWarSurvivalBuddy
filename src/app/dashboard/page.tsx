@@ -187,7 +187,6 @@ export default function Dashboard() {
     router.push('/signin')
   }
 
-  // Refresh quota after a report is submitted
   function handleReportComplete() {
     setBattleReportQuota(prev => ({
       ...prev,
@@ -232,7 +231,6 @@ export default function Dashboard() {
   const isFree = subscriptionTier === 'free'
   const isFounding = subscriptionTier === 'founding'
 
-  // Stats grid
   const statsGrid = [
     { label: 'HQ Level', value: profile.hq_level ?? '—' },
     { label: 'Troop Tier', value: troopTierDisplay(profile.troop_tier) },
@@ -255,13 +253,12 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-zinc-950 text-white">
 
-      {/* ── Warfighter mode banner (Boyd only — renders when mc_warfighter cookie is set) ── */}
+      {/* ── Warfighter mode banner ── */}
       <WarfighterBanner />
 
       {/* ── Top nav bar ── */}
       <header className="border-b border-zinc-800/80 bg-zinc-950/95 sticky top-0 z-20 backdrop-blur-sm">
         <div className="max-w-2xl mx-auto px-4 h-12 flex items-center justify-between">
-          {/* Left — logo */}
           <div className="flex items-center gap-2">
             <div className="w-6 h-6 bg-amber-500 rounded-sm flex items-center justify-center">
               <svg className="w-3.5 h-3.5 text-black" fill="currentColor" viewBox="0 0 16 16">
@@ -271,7 +268,6 @@ export default function Dashboard() {
             <span className="text-sm font-bold tracking-wide text-white">LWSB</span>
           </div>
 
-          {/* Right — controls */}
           <div className="flex items-center gap-3">
             {/* Duel day badge */}
             <div className={`
@@ -382,7 +378,6 @@ export default function Dashboard() {
         {/* ── BATTLE REPORT ANALYZER CARD ── */}
         <section className="pt-4">
           {isFree ? (
-            /* Free tier — locked card, routes to upgrade */
             <button
               onClick={() => router.push('/upgrade')}
               className="w-full group"
@@ -419,7 +414,6 @@ export default function Dashboard() {
               </div>
             </button>
           ) : (
-            /* Paid tier — live card */
             <button
               onClick={() => setBattleReportOpen(true)}
               className="w-full group"
@@ -499,7 +493,7 @@ export default function Dashboard() {
           )}
         </section>
 
-        {/* ── DESERT STORM WAR ROOM ── */}
+        {/* ── WAR ROOM CARD (Desert Storm + Warzone Duel) ── */}
         <section className="pt-4">
           <button
             onClick={() => router.push('/war-room')}
@@ -509,18 +503,27 @@ export default function Dashboard() {
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-start gap-3">
                   <div className="w-10 h-10 rounded-xl bg-amber-900/20 border border-amber-800/30 flex items-center justify-center flex-shrink-0">
-                    <span className="text-xl">🏜️</span>
+                    <span className="text-xl">🗺️</span>
                   </div>
                   <div className="text-left">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="text-sm font-bold text-white">Desert Storm War Room</span>
+                      <span className="text-sm font-bold text-white">War Room</span>
                       <span className="text-[10px] font-bold bg-green-500/15 border border-green-500/30 text-green-400 px-1.5 py-0.5 rounded tracking-wider">
                         FREE
                       </span>
                     </div>
                     <p className="text-xs text-zinc-500 leading-relaxed">
-                      Build your DS battle plan. Assign roles, generate a shareable strategy card, post it straight to alliance chat.
+                      Build shareable battle plans for your server. Assign roles, write orders, post to alliance chat.
                     </p>
+                    {/* Tool pills */}
+                    <div className="flex items-center gap-2 mt-2">
+                      <span className="text-[10px] text-zinc-500 bg-zinc-800 border border-zinc-700 px-2 py-0.5 rounded-full">
+                        🏜️ Desert Storm
+                      </span>
+                      <span className="text-[10px] text-zinc-500 bg-zinc-800 border border-zinc-700 px-2 py-0.5 rounded-full">
+                        ⚔️ Warzone Duel
+                      </span>
+                    </div>
                   </div>
                 </div>
                 <span className="text-zinc-600 group-hover:text-zinc-400 transition-colors flex-shrink-0 mt-1">
@@ -558,7 +561,6 @@ export default function Dashboard() {
             Commander Profile
           </p>
           <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-4 space-y-4">
-            {/* Name + tier + season */}
             <div className="flex items-start justify-between">
               <div>
                 <h3 className="text-base font-bold text-white">{profile.commander_name}</h3>
