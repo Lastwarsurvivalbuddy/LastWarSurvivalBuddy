@@ -49,7 +49,6 @@
     .nav-logo-text { font-family: 'Oswald', sans-serif; font-size: 20px; font-weight: 700;
       letter-spacing: 0.08em; color: var(--text); }
     .nav-logo-text span { color: var(--gold); }
-    /* CHANGE 1: Nav CTA — replaced email/password/Sign In with single Join the List button */
     .nav-cta-btn {
       background: linear-gradient(135deg, var(--red), var(--gold2));
       border: none; border-radius: 6px;
@@ -59,7 +58,6 @@
       box-shadow: 0 2px 12px rgba(192,96,16,0.35);
       transition: all 0.2s; white-space: nowrap; }
     .nav-cta-btn:hover { box-shadow: 0 4px 20px rgba(232,160,32,0.45); transform: translateY(-1px); }
-    /* Keep sign-in as a subtle text link for existing users */
     .nav-signin-link {
       font-family: 'Rajdhani', sans-serif; font-size: 12px; font-weight: 600;
       letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase;
@@ -94,8 +92,6 @@
       max-width: 600px; margin: 0 auto 16px; font-weight: 300;
       animation: fadeUp 0.8s 0.3s ease both; }
     .hero-sub strong { color: var(--text); font-weight: 600; }
-
-    /* CHANGE 2: Hero inline CTA button — sits between tagline and Battle Report callout */
     .hero-inline-cta {
       display: inline-flex; align-items: center; gap: 8px;
       background: linear-gradient(135deg, var(--red), var(--gold2), var(--gold));
@@ -107,7 +103,6 @@
       margin-bottom: 20px; animation: fadeUp 0.8s 0.35s ease both; }
     .hero-inline-cta:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(232,160,32,0.55); }
     .hero-inline-cta:active { transform: translateY(0); }
-
     .hero-battle-callout {
       display: inline-flex; align-items: center; gap: 12px;
       background: rgba(192,40,26,0.12); border: 1px solid rgba(192,40,26,0.35);
@@ -332,7 +327,6 @@
       border-color: rgba(160,100,232,0.35); }
     .price-card.purple-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
       background: linear-gradient(90deg, transparent, var(--purple), transparent); }
-    /* CHANGE 3: Pro card gets blue accent line to match its badge */
     .price-card.blue-card { background: linear-gradient(160deg, #040e1a, var(--card));
       border-color: rgba(96,160,232,0.3); }
     .price-card.blue-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
@@ -534,7 +528,7 @@
   <div class="grid-overlay"></div>
   <div class="scanlines"></div>
 
-  <!-- NAV — CHANGE 1: replaced email/password/Sign In with Join the List CTA + subtle Sign In text link -->
+  <!-- NAV -->
   <nav>
     <div class="nav-logo">
       <div class="nav-logo-icon">🪖</div>
@@ -559,7 +553,6 @@
       Tell us your server, your level, your goals —<br/>
       we'll tell you <strong>exactly what to do today.</strong>
     </p>
-    <!-- CHANGE 2: Hero inline CTA — above Battle Report callout, scrolls to email capture -->
     <button class="hero-inline-cta" onclick="document.querySelector('.cta-box').scrollIntoView({behavior:'smooth'})">
       Join the List — It's Free →
     </button>
@@ -639,12 +632,12 @@
     <div class="stat-divider"></div>
     <div class="stat"><span class="stat-number">⚔️</span><span class="stat-label">Battle Report Analyzer</span></div>
     <div class="stat-divider"></div>
-    <div class="stat"><span class="stat-number">🏜️</span><span class="stat-label">DS War Room</span></div>
+    <div class="stat"><span class="stat-number">🗺️</span><span class="stat-label">War Room · 2 Tools</span></div>
     <div class="stat-divider"></div>
     <div class="stat"><span class="stat-number">0</span><span class="stat-label">Discord Scrolling Required</span></div>
   </div>
 
-  <!-- CHANGE 4: COMMAND PROMPT PREVIEW — moved up immediately after stats row -->
+  <!-- COMMAND PROMPT PREVIEW -->
   <section style="position:relative;z-index:1;padding:100px 5%;background:linear-gradient(180deg,transparent,rgba(14,16,20,0.8),transparent);border-top:1px solid var(--border);">
     <div style="max-width:800px;margin:0 auto;">
       <div style="text-align:center;margin-bottom:48px;">
@@ -723,9 +716,9 @@
               <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#c06010,#e8a020);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;">🪖</div>
               <div style="background:#13161c;border:1px solid #222830;border-radius:2px 12px 12px 12px;padding:14px 16px;max-width:85%;">
                 <div style="font-size:13px;color:#e8e8e8;line-height:1.7;">
-                  <span style="color:#e07060;font-weight:700;font-family:'Rajdhani',sans-serif;letter-spacing:0.05em;">TYPE COUNTER — this is why.</span> Your Aircraft squad fought their <span style="color:#e8e8e8;font-weight:600;">Missile troops.</span> That's a hard counter — you dealt 20% less damage and took 20% more. <span style="color:#e8e8e8;font-weight:600;">Effective power swing: ~40%.</span><br/><br/>
-                  <span style="color:#e8a020;font-weight:600;">Stat screen confirms it</span> — your ATK shows red arrows despite equal gear. Classic counter matchup signature. Your power advantage was real, the matchup erased it.<br/><br/>
-                  <span style="color:#8090a0;font-size:12px;">Rematch verdict: Not Yet — swap to Missile squad first and the math flips in your favor.</span>
+                  <span style="color:#e07060;font-weight:700;font-family:'Rajdhani',sans-serif;letter-spacing:0.05em;">GEAR POSITIONING — this is why.</span> Your attack gear was slotted on your defense heroes and your defense gear was on your attack squad. <span style="color:#e8e8e8;font-weight:600;">Your raw power was real — your loadout wasn't set up for the fight.</span><br/><br/>
+                  <span style="color:#e8a020;font-weight:600;">The fix is simple</span> — I simply needed to move my gear into the right positions. At HQ 35 the stat swing on a correct loadout is significant.<br/><br/>
+                  <span style="color:#8090a0;font-size:12px;">Rematch verdict: Yes — fix the loadout and you win that fight clean.</span>
                 </div>
                 <div style="font-size:10px;color:#606878;margin-top:8px;">Buddy · just now</div>
               </div>
@@ -799,58 +792,75 @@
     </div>
   </section>
 
-  <!-- DESERT STORM WAR ROOM FEATURE SECTION -->
+  <!-- WAR ROOM FEATURE SECTION — updated for both tools -->
   <section class="war-room-banner">
     <div class="war-room-inner">
       <div>
         <div class="war-room-label">Free for All Players</div>
         <h2 class="war-room-title">
-          Desert Storm<br/><span>War Room</span>
+          War<br/><span>Room</span>
         </h2>
         <div class="war-room-free-pill">
           <span>✓ Free — No subscription required</span>
         </div>
         <p class="war-room-desc">
-          Alliance leaders: stop typing your DS plan in alliance chat last second.
-          Fill in your roles, hit generate — get a clean shareable strategy card
-          with your alliance name, role assignments, compass, and stage-by-stage
-          instructions. Save it. Post it. Done in 30 seconds.
+          R5s: stop typing your battle plan in alliance chat with 3 minutes on the clock.
+          Open the War Room, assign your alliances, write your orders — and generate a clean shareable card
+          your entire server can act on. Desert Storm and Warzone Duel. Done in 30 seconds.
+          Other battles coming soon.
         </p>
+        <!-- Tool pills -->
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:24px;">
+          <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(232,160,32,0.08);border:1px solid rgba(232,160,32,0.25);border-radius:8px;padding:8px 16px;">
+            <span style="font-size:16px;">🏜️</span>
+            <div>
+              <div style="font-family:'Oswald',sans-serif;font-size:12px;font-weight:600;letter-spacing:0.1em;color:#e8e8e8;">Desert Storm</div>
+              <div style="font-size:10px;color:#606878;">Role assignments · Compass · Shareable card</div>
+            </div>
+          </div>
+          <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(192,40,26,0.08);border:1px solid rgba(192,40,26,0.25);border-radius:8px;padding:8px 16px;">
+            <span style="font-size:16px;">⚔️</span>
+            <div>
+              <div style="font-family:'Oswald',sans-serif;font-size:12px;font-weight:600;letter-spacing:0.1em;color:#e8e8e8;">Warzone Duel</div>
+              <div style="font-size:10px;color:#606878;">Capitol · Cannons · Commander's orders</div>
+            </div>
+          </div>
+        </div>
         <a href="#notify" onclick="document.querySelector('.cta-box').scrollIntoView({behavior:'smooth'});return false;"
           style="display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#c06010,#e8a020);border:none;border-radius:8px;padding:13px 24px;color:#fff;font-family:'Oswald',sans-serif;font-size:14px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;box-shadow:0 4px 20px rgba(232,160,32,0.3);transition:all 0.2s;text-decoration:none;">
-          🏜️ Launching April 19, 2026 — Join the List →
+          🗺️ Launching April 19, 2026 — Join the List →
         </a>
       </div>
       <div class="war-room-grid">
         <div class="war-room-tile">
-          <div class="war-room-tile-icon">🔴</div>
-          <div class="war-room-tile-label">Roamers</div>
-          <div class="war-room-tile-desc">Your 4–6 strongest fighters. Eliminate enemies, support flanks, flood the Silo at Stage 2.</div>
+          <div class="war-room-tile-icon">🏜️</div>
+          <div class="war-room-tile-label">Desert Storm</div>
+          <div class="war-room-tile-desc">Assign Roamers, Flanks, Hospital Guards, Silo team. Compass included. Post it in one tap.</div>
         </div>
         <div class="war-room-tile">
-          <div class="war-room-tile-icon">🔵</div>
-          <div class="war-room-tile-label">West Flank</div>
-          <div class="war-room-tile-desc">Rush west at the horn. Oil Refinery + Info Center for the +10% point boost.</div>
-        </div>
-        <div class="war-room-tile">
-          <div class="war-room-tile-icon">🟢</div>
-          <div class="war-room-tile-label">East Flank</div>
-          <div class="war-room-tile-desc">Rush east at the horn. Oil Refinery + Science Hub to cut enemy teleport cooldown.</div>
-        </div>
-        <div class="war-room-tile">
-          <div class="war-room-tile-icon">🟡</div>
-          <div class="war-room-tile-label">Hospital Guards</div>
-          <div class="war-room-tile-desc">Hold all 4 Field Hospitals. 15 troops heal every 10 seconds. Do not leave.</div>
-        </div>
-        <div class="war-room-tile">
-          <div class="war-room-tile-icon">🟣</div>
-          <div class="war-room-tile-label">Nuclear Silo</div>
-          <div class="war-room-tile-desc">Stage 2 only (10 min mark). Rush immediately. Highest point yield in the game.</div>
+          <div class="war-room-tile-icon">⚔️</div>
+          <div class="war-room-tile-label">Warzone Duel</div>
+          <div class="war-room-tile-desc">Assign alliances to Capitol and all 4 cannons. Write your orders. Share the card server-wide.</div>
         </div>
         <div class="war-room-tile">
           <div class="war-room-tile-icon">🧭</div>
-          <div class="war-room-tile-label">Compass Included</div>
-          <div class="war-room-tile-desc">Every card has a NSEW compass. Your members will actually know which way to go.</div>
+          <div class="war-room-tile-label">Compass on Every Card</div>
+          <div class="war-room-tile-desc">N/S/E/W on every plan. Your people will know which way to move before the horn sounds.</div>
+        </div>
+        <div class="war-room-tile">
+          <div class="war-room-tile-icon">📋</div>
+          <div class="war-room-tile-label">Commander's Orders</div>
+          <div class="war-room-tile-desc">Write your doctrine once. Generate the card. Post it. No more last-second chaos in chat.</div>
+        </div>
+        <div class="war-room-tile">
+          <div class="war-room-tile-icon">📲</div>
+          <div class="war-room-tile-label">Save & Share Instantly</div>
+          <div class="war-room-tile-desc">Save as image on mobile. Post straight to Alliance Chat, Discord, or server email. 30 seconds total.</div>
+        </div>
+        <div class="war-room-tile">
+          <div class="war-room-tile-icon">➕</div>
+          <div class="war-room-tile-label">Other Battles Coming</div>
+          <div class="war-room-tile-desc">More battle tools coming soon. Other battles coming soon to the War Room.</div>
         </div>
       </div>
     </div>
@@ -880,17 +890,17 @@
       </div>
       <div class="feature-card war-room-feature">
         <div class="feature-free-badge">Free — All Players</div>
-        <div class="feature-icon amber">🏜️</div>
-        <div class="feature-title">Desert Storm War Room</div>
+        <div class="feature-icon amber">🗺️</div>
+        <div class="feature-title">War Room</div>
         <div class="feature-desc">
-          Alliance leaders: assign roles, generate a shareable battle plan card,
-          post it straight to alliance chat. Compass included. Takes 30 seconds.
-          Every card carries your URL.
+          Desert Storm and Warzone Duel battle plan generator. Assign alliances, write your orders,
+          generate a shareable card — post it to alliance chat in 30 seconds.
+          Compass included. Other battles coming soon.
         </div>
         <div class="feature-tags">
           <span class="feature-tag amber">Free</span>
+          <span class="feature-tag amber">DS + WZ Duel</span>
           <span class="feature-tag amber">Shareable card</span>
-          <span class="feature-tag amber">Alliance leaders</span>
         </div>
       </div>
       <div class="feature-card">
@@ -946,11 +956,11 @@
         </div>
         <div class="quote-card">
           <div class="quote-mark">"</div>
-          <p class="quote-text">I lost a fight to someone 40M weaker than me. Buddy told me it was a <strong>troop type counter</strong> — Aircraft vs Missile. I had no idea that was even a mechanic.</p>
+          <p class="quote-text">I lost a fight to someone 4M weaker than me. Buddy told me my gear was in the wrong positions. <strong>I simply needed to move my gear into the right slots.</strong> Never would have figured that out on my own.</p>
           <div class="quote-author">
             <div class="quote-author-dot"></div>
             <div class="quote-author-info">
-              <div class="quote-author-name">Server 1032 · HQ 28</div>
+              <div class="quote-author-name">Server 1032 · HQ 35</div>
               <div class="quote-author-meta">Day 210 · Tank · Early Access</div>
             </div>
           </div>
@@ -970,7 +980,7 @@
     </div>
   </section>
 
-  <!-- PRICING — CHANGE 3: Pro gets "Best Value" badge, Elite loses "Most Popular" -->
+  <!-- PRICING -->
   <section class="pricing">
     <div class="pricing-inner">
       <div style="text-align:center;">
@@ -989,9 +999,9 @@
           <div class="price-feature">✦ No screenshots</div>
           <div class="price-feature">✦ Daily action plan</div>
           <div class="price-feature">✦ Commander Card</div>
-          <div class="price-feature war-room">✦ <strong>🏜️ DS War Room</strong></div>
+          <div class="price-feature war-room">✦ <strong>🗺️ War Room</strong></div>
         </div>
-        <!-- Pro — Best Value badge, blue accent -->
+        <!-- Pro -->
         <div class="price-card blue-card">
           <div class="price-header">
             <div class="price-tier-name" style="color:var(--blue);">Buddy Pro</div>
@@ -1005,9 +1015,9 @@
           <div class="price-feature highlight">✦ <strong>⚔️ 3 Battle Reports</strong> / day</div>
           <div class="price-feature">✦ Pack Scanner</div>
           <div class="price-feature">✦ Daily action plan</div>
-          <div class="price-feature war-room">✦ <strong>🏜️ DS War Room</strong></div>
+          <div class="price-feature war-room">✦ <strong>🗺️ War Room</strong></div>
         </div>
-        <!-- Elite — no badge -->
+        <!-- Elite -->
         <div class="price-card gold-card">
           <div class="price-tier-name" style="color:var(--gold);">Buddy Elite</div>
           <div class="price-amount" style="color:var(--gold);">$19.99<span>/mo</span></div>
@@ -1018,9 +1028,9 @@
           <div class="price-feature highlight">✦ <strong>⚔️ 5 Battle Reports</strong> / day</div>
           <div class="price-feature">✦ Pack Scanner</div>
           <div class="price-feature">✦ Priority features</div>
-          <div class="price-feature war-room">✦ <strong>🏜️ DS War Room</strong></div>
+          <div class="price-feature war-room">✦ <strong>🗺️ War Room</strong></div>
         </div>
-        <!-- Founding Member — 500 Only badge unchanged -->
+        <!-- Founding Member -->
         <div class="price-card purple-card">
           <div class="price-header">
             <div class="price-tier-name" style="color:var(--purple2);">Founding Member</div>
@@ -1035,11 +1045,11 @@
           <div class="price-feature">✦ Pack Scanner</div>
           <div class="price-feature" style="color:var(--purple2);">✦ Every future feature</div>
           <div class="price-feature" style="color:var(--purple2);">✦ Founding Member badge</div>
-          <div class="price-feature war-room">✦ <strong>🏜️ DS War Room</strong></div>
+          <div class="price-feature war-room">✦ <strong>🗺️ War Room</strong></div>
         </div>
       </div>
       <div style="margin-top:32px;text-align:center;font-size:12px;color:var(--muted);line-height:1.8;">
-        All tiers include the Daily Action Plan, Commander Card, and Desert Storm War Room.<br/>
+        All tiers include the Daily Action Plan, Commander Card, and War Room (Desert Storm + Warzone Duel).<br/>
         Battle Report Analyzer requires Pro or higher. Founding Member is a limited lifetime tier — 500 spots total.
       </div>
     </div>
@@ -1099,14 +1109,13 @@
     </div>
   </section>
 
-  <!-- FAQ — OBJECTION HANDLING -->
+  <!-- FAQ -->
   <section class="faq-section">
     <div class="faq-inner">
       <div class="section-label" style="text-align:center;margin-bottom:10px;">Common Questions</div>
       <h2 class="faq-heading">Built Different.</h2>
       <p class="faq-sub">The questions people ask before they sign up — answered.</p>
       <div class="faq-list">
-
         <details class="faq-item">
           <summary class="faq-question">Why isn't this free?</summary>
           <p class="faq-answer">
@@ -1118,7 +1127,6 @@
             <span class="faq-gold">one bad pack purchase costs more than a month of Pro.</span>
           </p>
         </details>
-
         <details class="faq-item">
           <summary class="faq-question">Why not just use ChatGPT?</summary>
           <p class="faq-answer">
@@ -1130,7 +1138,6 @@
             <span class="faq-gold">Generic AI gives generic answers. Buddy gives yours.</span>
           </p>
         </details>
-
         <details class="faq-item">
           <summary class="faq-question">Is my game account safe?</summary>
           <p class="faq-answer">
@@ -1139,7 +1146,6 @@
             That's it. No scraping. No account linking. No risk.
           </p>
         </details>
-
         <details class="faq-item">
           <summary class="faq-question">What if Buddy gets something wrong?</summary>
           <p class="faq-answer">
@@ -1150,7 +1156,6 @@
             <span class="faq-gold">We're not building the illusion of omniscience. We're building something that gets better every day.</span>
           </p>
         </details>
-
       </div>
     </div>
   </section>
